@@ -79,8 +79,9 @@ export default async function Footer() {
                         </div>
                     </div>
                 </div>
-                <div className="mt-8 border-t border-gray-800 pt-8 text-center text-gray-400">
-                    <p>&copy; {new Date().getFullYear()} {siteName}. All rights reserved.</p>
+                <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                    <p>&copy; {new Date().getFullYear()} MTsN 1 Pacitan. All rights reserved.</p>
+                    <p className="text-xs mt-2 text-gray-600">Server Time: {new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}</p>
                 </div>
             </div>
         </footer>
