@@ -163,7 +163,10 @@ export default function Header({ sidebarOpen, setSidebarOpen, user }: HeaderProp
                                     </li>
                                 </ul>
                                 <button
-                                    onClick={() => signOut({ callbackUrl: '/login' })}
+                                    onClick={async () => {
+                                        await signOut({ redirect: false })
+                                        window.location.href = "/login"
+                                    }}
                                     className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
                                 >
                                     <LogOut size={22} />
