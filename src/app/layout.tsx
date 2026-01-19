@@ -4,12 +4,22 @@ import './globals.css';
 
 
 
+import { getSettings } from "@/actions/settings"
+
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: 'MTsN 1 Pacitan - Madrasah Hebat Bermartabat',
-  description: 'Website Resmi MTsN 1 Pacitan',
-};
+export async function generateMetadata() {
+  const settings = await getSettings()
+
+  return {
+    title: settings['site_name'] || 'MTsN 1 Pacitan - Madrasah Hebat Bermartabat',
+    description: settings['site_description'] || 'Website Resmi MTsN 1 Pacitan',
+    icons: {
+      icon: settings['site_logo'] || '/favicon.ico',
+      apple: settings['site_logo'] || '/favicon.ico',
+    }
+  }
+}
 
 export default function RootLayout({
   children,
