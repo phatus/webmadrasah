@@ -1,0 +1,3 @@
+@echo off
+echo Starting MTsN 1 Pacitan Web...
+npm run dev

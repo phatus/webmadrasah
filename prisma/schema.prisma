@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  username  String   @unique
+  password  String
+  image     String?
+  bio       String?
+  role      String   @default("EDITOR") // "ADMIN" or "EDITOR"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
+}
+
+model Post {
+  id          Int       @id @default(autoincrement())
+  title       String
+  slug        String    @unique
+  excerpt     String?
+  content     String
+  image       String?
+  published   Boolean   @default(false)
+  authorId    Int
+  author      User      @relation(fields: [authorId], references: [id])
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  
+  // SEO Fields
+  metaTitle       String?
+  metaDescription String?
+  ogImage         String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([authorId])
+  @@index([categoryId])
+}
+
+model Agenda {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  date        DateTime
+  location    String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Download {
+  id          Int      @id @default(autoincrement())
+  title       String
+  fileUrl     String
+  category    String   @default("Umum") // e.g. "SK", "Formulir", "Rapor"
+  createdAt   DateTime @default(now())
+}
+
+model Gallery {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  cover       String?
+  images      String   // Stored as JSON string of array
+  createdAt   DateTime @default(now())
+}
+
+model Teacher {
+  id        Int      @id @default(autoincrement())
+  name      String
+  nip       String?  // Nomor Induk Pegawai (optional)
+  position  String   // e.g. "Kepala Madrasah", "Waka Kurikulum", "Guru Mapel"
+  subject   String?  // e.g. "Matematika", "Bahasa Indonesia"
+  image     String?  // URL to image
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PageContent {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  title     String
+  content   String
+  meta      String?  // JSON string for flexible metadata (e.g. headmaster image, quote)
+  updatedAt DateTime @updatedAt
+}
+
+model Achievement {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  category    String   // "Akademik" or "Non-Akademik"
+  level       String   // "Kabupaten", "Provinsi", "Nasional", "Internasional"
+  rank        String?  // "Juara 1", "Juara 2", "Gold Medal", etc.
+  date        DateTime
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Extracurricular {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  image       String?
+  schedule    String?  // e.g. "Setiap Sabtu, 14.00 WIB"
+  location    String?  // e.g. "Lapangan Basket"
+  pembina     String?  // Nama Pembina
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Facility {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inquiry {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String?
+  type      String   @default("INFO") // INFO, POPUP, RUNNING_TEXT
+  isActive  Boolean  @default(true)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Alumni {
+  id              Int      @id @default(autoincrement())
+  name            String
+  graduationYear  Int
+  currentStatus   String?  // Kuliah, Bekerja, dll.
+  institution     String?  // Nama Universitas / Perusahaan
+  image           String?
+  phone           String?
+  email           String?
+  isVerified      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model FeaturedProgram {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  icon        String   // Lucide icon name
+  color       String   // Color theme: "emerald", "blue", "orange", "purple", "red", "cyan"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Video {
+  id          Int      @id @default(autoincrement())
+  title       String
+  url         String   // YouTube URL
+  youtubeId   String   // Extracted ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
