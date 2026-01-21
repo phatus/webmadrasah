@@ -2,9 +2,10 @@
 
 import { updateHero } from "@/actions/home-editor"
 import { useActionState } from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { CldUploadWidget } from 'next-cloudinary'
+import { X, Plus, Image as ImageIcon } from 'lucide-react'
 
 // Define the type properly
 type HeroData = {
@@ -18,7 +19,7 @@ export default function HeroEditor({ initialData }: { initialData: HeroData | nu
     const [state, formAction] = useActionState(updateHero, null)
 
     // Parse meta if it exists
-    let meta = {}
+    let meta: any = {}
     try {
         if (initialData?.meta) {
             meta = JSON.parse(initialData.meta)
@@ -27,8 +28,13 @@ export default function HeroEditor({ initialData }: { initialData: HeroData | nu
         console.error("Error parsing hero meta:", e)
     }
 
-    // @ts-ignore
-    const [imageUrl, setImageUrl] = useState(meta.image || "")
+    // Handle legacy single image or new images array
+    const initialImages = Array.isArray(meta.images) ? meta.images : (meta.image ? [meta.image] : [])
+    const [images, setImages] = useState<string[]>(initialImages)
+
+    const removeImage = (index: number) => {
+        setImages(images.filter((_, i) => i !== index))
+    }
 
     return (
         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -39,42 +45,63 @@ export default function HeroEditor({ initialData }: { initialData: HeroData | nu
             </div>
             <form action={formAction}>
                 <div className="p-6.5">
-                    {/* Hero Image Upload */}
-                    <div className="mb-4.5">
-                        <label className="mb-2.5 block text-black dark:text-white">
-                            Hero Image
+                    {/* Hero Images Section */}
+                    <div className="mb-6">
+                        <label className="mb-2.5 block text-black dark:text-white font-medium">
+                            Hero Images (Slider)
                         </label>
-                        <CldUploadWidget
-                            uploadPreset="webmadrasah_preset"
-                            onSuccess={(result: any) => {
-                                setImageUrl(result.info.secure_url);
-                            }}
-                        >
-                            {({ open }) => {
-                                return (
-                                    <div
-                                        onClick={() => open()}
-                                        className="relative flex h-48 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-gray dark:bg-meta-4"
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+                            {images.map((url, index) => (
+                                <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border border-stroke dark:border-strokedark">
+                                    <Image
+                                        src={url}
+                                        alt={`Hero ${index + 1}`}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeImage(index)}
+                                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                                     >
-                                        {imageUrl ? (
-                                            <div className="relative h-full w-full">
-                                                <Image
-                                                    src={imageUrl}
-                                                    alt="Hero"
-                                                    fill
-                                                    className="object-cover rounded-lg"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center">
-                                                <span className="text-primary">Click to upload</span>
-                                            </div>
-                                        )}
+                                        <X size={16} />
+                                    </button>
+                                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded">
+                                        Slide {index + 1}
                                     </div>
-                                );
-                            }}
-                        </CldUploadWidget>
-                        <input type="hidden" name="image" value={imageUrl} />
+                                </div>
+                            ))}
+
+                            <CldUploadWidget
+                                uploadPreset="webmadrasah_preset"
+                                onSuccess={(result: any) => {
+                                    setImages([...images, result.info.secure_url]);
+                                }}
+                            >
+                                {({ open }) => {
+                                    return (
+                                        <button
+                                            type="button"
+                                            onClick={() => open()}
+                                            className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-gray dark:bg-meta-4 hover:bg-opacity-10 transition-colors"
+                                        >
+                                            <Plus className="text-primary mb-1" size={24} />
+                                            <span className="text-xs text-primary font-medium">Add Photo</span>
+                                        </button>
+                                    );
+                                }}
+                            </CldUploadWidget>
+                        </div>
+
+                        {images.length === 0 && (
+                            <div className="py-10 text-center border-2 border-dashed border-stroke rounded-lg">
+                                <ImageIcon size={40} className="mx-auto text-gray-400 mb-2" />
+                                <p className="text-sm text-gray-500">No images uploaded yet. Add at least one image for the hero slider.</p>
+                            </div>
+                        )}
+
+                        <input type="hidden" name="images" value={JSON.stringify(images)} />
                     </div>
 
                     <div className="mb-4.5">
@@ -130,23 +157,21 @@ export default function HeroEditor({ initialData }: { initialData: HeroData | nu
                         </div>
                     </div>
 
-                    {/* Secondary Button fields can be added similarly if needed */}
-
                     {state?.error && (
-                        <div className="mb-4 text-sm text-red-600">
+                        <div className="mb-4 rounded bg-red-50 py-2 px-4 text-sm text-red-600">
                             {state.error}
                         </div>
                     )}
 
                     {state?.success && (
-                        <div className="mb-4 text-sm text-green-600">
+                        <div className="mb-4 rounded bg-green-50 py-2 px-4 text-sm text-green-600">
                             {state.success}
                         </div>
                     )}
 
                     <button
                         type="submit"
-                        className="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90"
+                        className="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90 transition-all"
                     >
                         Simpan Perubahan
                     </button>

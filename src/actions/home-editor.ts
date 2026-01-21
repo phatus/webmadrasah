@@ -8,7 +8,7 @@ import { z } from "zod"
 const HeroSchema = z.object({
     title: z.string().min(1, "Judul harus diisi"),
     content: z.string().min(1, "Deskripsi harus diisi"),
-    image: z.string().optional(),
+    images: z.array(z.string()).optional(),
     primaryButtonText: z.string().optional(),
     primaryButtonLink: z.string().optional(),
     secondaryButtonText: z.string().optional(),
@@ -50,10 +50,20 @@ export async function getHomeData(key: string) {
 }
 
 export async function updateHero(prevState: any, formData: FormData) {
+    const imagesJson = formData.get("images")?.toString()
+    let images: string[] = []
+    try {
+        if (imagesJson) {
+            images = JSON.parse(imagesJson)
+        }
+    } catch (e) {
+        console.error("Error parsing images JSON:", e)
+    }
+
     const rawData = {
         title: formData.get("title")?.toString() || "",
         content: formData.get("content")?.toString() || "",
-        image: formData.get("image")?.toString() || undefined,
+        images: images,
         primaryButtonText: formData.get("primaryButtonText")?.toString() || undefined,
         primaryButtonLink: formData.get("primaryButtonLink")?.toString() || undefined,
         secondaryButtonText: formData.get("secondaryButtonText")?.toString() || undefined,
