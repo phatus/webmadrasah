@@ -98,6 +98,7 @@ export async function updateHero(prevState: any, formData: FormData) {
         })
 
         revalidatePath("/")
+        revalidatePath("/dashboard/home")
         return { success: "Hero section updated successfully" }
     } catch (error) {
         console.error("Error updating hero:", error)
@@ -126,6 +127,7 @@ export async function updateCards(cardsData: any[]) {
         })
 
         revalidatePath("/")
+        revalidatePath("/dashboard/home")
         return { success: "Cards updated successfully" }
     } catch (error) {
         console.error("Error updating cards:", error)
