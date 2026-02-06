@@ -119,7 +119,7 @@ export default function NavbarClient({ siteName, logoUrl }: NavbarClientProps) {
                                 Download
                             </Link>
 
-                            <Link href="https://spmb.mtsn1pacitan.sch.id" target="_blank" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">
+                            <Link href="https://pmbm.mtsn1pacitan.sch.id" target="_blank" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">
                                 PMBM
                             </Link>
 
@@ -222,7 +222,7 @@ export default function NavbarClient({ siteName, logoUrl }: NavbarClientProps) {
                             <Link href="/download" className="text-sm font-medium text-gray-700 hover:text-emerald-600">
                                 Download
                             </Link>
-                            <Link href="https://spmb.mtsn1pacitan.sch.id" target="_blank" className="text-sm font-medium text-gray-700 hover:text-emerald-600">
+                            <Link href="https://pmbm.mtsn1pacitan.sch.id" target="_blank" className="text-sm font-medium text-gray-700 hover:text-emerald-600">
                                 PMBM
                             </Link>
                             <Link href="/portal" className="inline-flex w-full items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-emerald-700">
