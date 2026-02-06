@@ -20,10 +20,11 @@ export async function getPosts(page = 1, limit = 10) {
         prisma.post.findMany({
             skip,
             take: limit,
+            where: { published: true },
             orderBy: { createdAt: 'desc' },
             include: { author: { select: { name: true } } }
         }),
-        prisma.post.count()
+        prisma.post.count({ where: { published: true } })
     ])
 
     return { posts, total, totalPages: Math.ceil(total / limit) }
