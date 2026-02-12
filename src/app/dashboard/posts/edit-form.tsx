@@ -32,6 +32,7 @@ interface EditPostFormProps {
         categoryId: number | null
         metaTitle: string | null
         metaDescription: string | null
+        published: boolean
     }
 }
 
@@ -186,6 +187,24 @@ export default function EditPostForm({ post }: EditPostFormProps) {
                                 </div>
                             </div>
                         </details>
+
+                        <div className="mb-6">
+                            <label className="flex items-center cursor-pointer select-none group">
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        name="published"
+                                        defaultChecked={post.published}
+                                        className="sr-only"
+                                    />
+                                    <div className="block h-8 w-14 rounded-full bg-slate-200"></div>
+                                    <div className="dot absolute left-1 top-1 h-6 w-6 rounded-full bg-white transition group-has-[:checked]:translate-x-full group-has-[:checked]:bg-emerald-600"></div>
+                                </div>
+                                <div className="ml-3 text-black font-medium">
+                                    Publikasikan Sekarang
+                                </div>
+                            </label>
+                        </div>
 
                         <SubmitButton />
                     </div>
