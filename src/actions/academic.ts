@@ -9,15 +9,16 @@ import { deleteImages } from "@/lib/cloudinary"
 
 // === AGENDA ===
 
-export async function getAgendas(limit?: number) {
+export async function getAgendas(limit?: number, showPast = false) {
+    const where = showPast ? {} : {
+        date: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0))
+        }
+    }
     return await prisma.agenda.findMany({
         orderBy: { date: 'asc' },
         take: limit,
-        where: {
-            date: {
-                gte: new Date(new Date().setHours(0, 0, 0, 0))
-            }
-        }
+        where
     })
 }
 

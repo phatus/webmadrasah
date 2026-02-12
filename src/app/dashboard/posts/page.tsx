@@ -3,7 +3,7 @@ import { getPosts, deletePost } from "@/actions/post"
 import { revalidatePath } from "next/cache"
 
 export default async function DashboardPosts() {
-    const { posts } = await getPosts(1, 100)
+    const { posts } = await getPosts(1, 100, true)
 
     return (
         <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default sm:px-7.5 xl:pb-1">
@@ -20,7 +20,7 @@ export default async function DashboardPosts() {
             </div>
 
             <div className="flex flex-col">
-                <div className="grid grid-cols-3 rounded-sm bg-gray-2 sm:grid-cols-4 bg-gray-100 p-2.5">
+                <div className="grid grid-cols-4 rounded-sm bg-gray-2 bg-gray-100 p-2.5">
                     <div className="p-2.5 xl:p-5">
                         <h5 className="text-sm font-medium uppercase xsm:text-base text-gray-600">
                             Judul
@@ -28,7 +28,7 @@ export default async function DashboardPosts() {
                     </div>
                     <div className="p-2.5 text-center xl:p-5">
                         <h5 className="text-sm font-medium uppercase xsm:text-base text-gray-600">
-                            Penulis
+                            Status
                         </h5>
                     </div>
                     <div className="p-2.5 text-center xl:p-5">
@@ -36,7 +36,7 @@ export default async function DashboardPosts() {
                             Tanggal
                         </h5>
                     </div>
-                    <div className="hidden sm:block p-2.5 text-center xl:p-5">
+                    <div className="p-2.5 text-center xl:p-5">
                         <h5 className="text-sm font-medium uppercase xsm:text-base text-gray-600">
                             Aksi
                         </h5>
@@ -45,29 +45,31 @@ export default async function DashboardPosts() {
 
                 {posts.map((post: any, key: number) => (
                     <div
-                        className={`grid grid-cols-3 sm:grid-cols-4 ${key === posts.length - 1
-                                ? ""
-                                : "border-b border-stroke border-gray-100"
+                        className={`grid grid-cols-4 ${key === posts.length - 1
+                            ? ""
+                            : "border-b border-stroke border-gray-100"
                             }`}
                         key={post.id}
                     >
-                        <div className="flex items-center gap-3 p-2.5 xl:p-5">
-                            <p className="hidden text-black sm:block font-medium truncate">
+                        <div className="flex items-center p-2.5 xl:p-5">
+                            <p className="text-black font-medium truncate">
                                 {post.title}
                             </p>
                         </div>
 
                         <div className="flex items-center justify-center p-2.5 xl:p-5">
-                            <p className="text-black">{post.author.name}</p>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${post.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                {post.published ? 'Published' : 'Draft'}
+                            </span>
                         </div>
 
                         <div className="flex items-center justify-center p-2.5 xl:p-5">
-                            <p className="text-black">
+                            <p className="text-black text-sm">
                                 {new Date(post.createdAt).toLocaleDateString("id-ID")}
                             </p>
                         </div>
 
-                        <div className="hidden sm:flex items-center justify-center p-2.5 xl:p-5 gap-3">
+                        <div className="flex items-center justify-center p-2.5 xl:p-5 gap-3">
                             <Link
                                 href={`/dashboard/posts/${post.id}/edit`}
                                 className="hover:text-emerald-600 transition-colors"

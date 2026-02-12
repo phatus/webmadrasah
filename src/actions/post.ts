@@ -14,17 +14,18 @@ const PostSchema = z.object({
     image: z.string().optional(),
 })
 
-export async function getPosts(page = 1, limit = 10) {
+export async function getPosts(page = 1, limit = 10, showUnpublished = false) {
     const skip = (page - 1) * limit
+    const where = showUnpublished ? {} : { published: true }
     const [posts, total] = await Promise.all([
         prisma.post.findMany({
             skip,
             take: limit,
-            where: { published: true },
+            where,
             orderBy: { createdAt: 'desc' },
             include: { author: { select: { name: true } } }
         }),
-        prisma.post.count({ where: { published: true } })
+        prisma.post.count({ where })
     ])
 
     return { posts, total, totalPages: Math.ceil(total / limit) }
@@ -32,11 +33,11 @@ export async function getPosts(page = 1, limit = 10) {
 
 import { unstable_cache } from "next/cache"
 
-export const getCachedPosts = unstable_cache(
-    async (page = 1, limit = 10) => getPosts(page, limit),
-    ['posts-list'],
-    { tags: ['posts'], revalidate: 60 }
-)
+export const getCachedPosts = (page = 1, limit = 10) => unstable_cache(
+    async () => getPosts(page, limit),
+    ['posts-list', `page-${page}`, `limit-${limit}`],
+    { tags: ['posts'], revalidate: 3600 }
+)()
 
 export async function getPost(slug: string) {
     return await prisma.post.findUnique({
@@ -88,6 +89,7 @@ export async function createPost(formData: FormData) {
 
     revalidatePath('/')
     revalidatePath('/dashboard/posts')
+    revalidatePath('/berita')
     redirect('/dashboard/posts')
 }
 
@@ -96,7 +98,9 @@ export async function deletePost(id: number) {
     if (!session) throw new Error("Unauthorized")
 
     await prisma.post.delete({ where: { id } })
+    revalidatePath('/')
     revalidatePath('/dashboard/posts')
+    revalidatePath('/berita')
 }
 
 export async function updatePost(id: number, formData: FormData) {
@@ -135,5 +139,6 @@ export async function updatePost(id: number, formData: FormData) {
 
     revalidatePath('/')
     revalidatePath('/dashboard/posts')
+    revalidatePath('/berita')
     redirect('/dashboard/posts')
 }
