@@ -33,11 +33,13 @@ export async function getPosts(page = 1, limit = 10, showUnpublished = false) {
 
 import { unstable_cache } from "next/cache"
 
-export const getCachedPosts = (page = 1, limit = 10) => unstable_cache(
-    async () => getPosts(page, limit),
-    ['posts-list', `page-${page}`, `limit-${limit}`],
-    { tags: ['posts'], revalidate: 3600 }
-)()
+export async function getCachedPosts(page = 1, limit = 10) {
+    return unstable_cache(
+        async () => getPosts(page, limit),
+        ['posts-list', `page-${page}`, `limit-${limit}`],
+        { tags: ['posts'], revalidate: 3600 }
+    )()
+}
 
 export async function getPost(slug: string) {
     return await prisma.post.findUnique({
