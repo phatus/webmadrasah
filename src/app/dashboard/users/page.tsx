@@ -37,7 +37,7 @@ export default async function UsersPage() {
                     </div>
                 </div>
 
-                {users.map((user) => (
+                {users.map((user: any) => (
                     <div
                         key={user.id}
                         className="grid grid-cols-3 border-b border-stroke dark:border-strokedark sm:grid-cols-4"
