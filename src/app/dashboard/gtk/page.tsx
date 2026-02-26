@@ -51,11 +51,11 @@ export default async function GTKDashboardPage() {
                         Belum ada data guru.
                     </div>
                 ) : (
-                    teachers.map((teacher, key) => (
+                    teachers.map((teacher: any, key: number) => (
                         <div
                             className={`grid grid-cols-3 sm:grid-cols-4 ${key === teachers.length - 1
-                                    ? ""
-                                    : "border-b border-stroke border-gray-100"
+                                ? ""
+                                : "border-b border-stroke border-gray-100"
                                 }`}
                             key={teacher.id}
                         >
