@@ -2,7 +2,7 @@
 
 import { useFormState } from "react-dom"
 import { updateSettings } from "@/actions/settings"
-import { Save, MapPin, info } from "lucide-react"
+import { Save, MapPin, Info } from "lucide-react"
 
 interface LocationSettingsFormProps {
     settings: Record<string, string>
@@ -42,7 +42,7 @@ export default function LocationSettingsForm({ settings }: LocationSettingsFormP
                     <MapPin className="text-emerald-600" size={20} />
                     <h3 className="font-bold text-black uppercase tracking-tight">Konfigurasi Peta Lokasi</h3>
                 </div>
-                
+
                 <div className="p-8">
                     <div className="mb-6">
                         <label className="mb-3 block text-sm font-bold text-black uppercase tracking-wider">
@@ -56,7 +56,7 @@ export default function LocationSettingsForm({ settings }: LocationSettingsFormP
                             placeholder="Tempel URL atau kode iframe Google Maps di sini..."
                             className="w-full rounded-xl border-2 border-stroke bg-transparent py-4 px-5 font-medium outline-none transition focus:border-emerald-600 active:border-emerald-600 placeholder:text-gray-400"
                         ></textarea>
-                        
+
                         <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 flex gap-3 text-blue-800 text-sm italic">
                             <div className="mt-0.5">💡</div>
                             <p>
