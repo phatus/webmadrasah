@@ -10,6 +10,10 @@ export default async function Footer() {
     const address = settings['contact_address'] || "R34X+6XQ, Jl. H. Samanhudi, Palihan, Pucangsewu, Kec. Pacitan, Kabupaten Pacitan, Jawa Timur 63511"
     const phone = settings['contact_phone'] || "(0357) 881303"
     const email = settings['contact_email'] || "info@mtsnpacitan.sch.id"
+    const mapEmbed = settings['map_embed'] || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.465492415175!2d111.08868971077755!3d-8.198308782046467!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7961bd40e66f8d%3A0xc682da26850c905b!2sMTs%20Negeri%20Pacitan!5e0!3m2!1sen!2sid!4v1705646199464!5m2!1sen!2sid"
+    const mapUrl = mapEmbed.includes('<iframe') 
+        ? (mapEmbed.match(/src=["'](.+?)["']/)?.[1] || mapEmbed) 
+        : mapEmbed
 
     return (
         <footer className="bg-gray-900 text-white">
@@ -68,7 +72,7 @@ export default async function Footer() {
                         <h4 className="text-lg font-semibold">Lokasi</h4>
                         <div className="mt-4 overflow-hidden rounded-lg shadow-sm border border-gray-800">
                             <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.465492415175!2d111.08868971077755!3d-8.198308782046467!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7961bd40e66f8d%3A0xc682da26850c905b!2sMTs%20Negeri%20Pacitan!5e0!3m2!1sen!2sid!4v1705646199464!5m2!1sen!2sid"
+                                src={mapUrl}
                                 width="100%"
                                 height="200"
                                 style={{ border: 0 }}

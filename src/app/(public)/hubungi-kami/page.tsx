@@ -1,13 +1,25 @@
-
 import ContactForm from "@/components/public/ContactForm"
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
+import { getSettings } from "@/actions/settings"
 
 export const metadata = {
     title: "Hubungi Kami | MTsN 1 Pacitan",
     description: "Hubungi kami untuk informasi lebih lanjut mengenai MTsN 1 Pacitan.",
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+    const settings = await getSettings()
+    
+    const address = settings['contact_address'] || "Jl. H. Samanhudi No. 15, Kelurahan Pacitan, Kecamatan Pacitan, Kabupaten Pacitan, Jawa Timur 63511"
+    const phone = settings['contact_phone'] || "(0357) 881061 / 0813-3070-7048"
+    const email = settings['contact_email'] || "info@mtsn1pacitan.sch.id"
+    const mapEmbed = settings['map_embed'] || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.355152562477!2d111.0965383147775!3d-8.19757659409895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7961b7b7a60b09%3A0xe5f9b8b8b8b8b8b8!2sMTsN%20Pacitan!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid"
+
+    // Extract src from iframe if user pasted the whole thing
+    const mapUrl = mapEmbed.includes('<iframe') 
+        ? (mapEmbed.match(/src=["'](.+?)["']/)?.[1] || mapEmbed) 
+        : mapEmbed
+
     return (
         <main className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -43,7 +55,7 @@ export default function ContactPage() {
                                         <div className="ml-4">
                                             <h4 className="text-lg font-semibold text-gray-900">Alamat</h4>
                                             <p className="mt-1 text-gray-600">
-                                                Jl. H. Samanhudi No. 15, Kelurahan Pacitan, Kecamatan Pacitan, Kabupaten Pacitan, Jawa Timur 63511
+                                                {address}
                                             </p>
                                         </div>
                                     </div>
@@ -55,7 +67,7 @@ export default function ContactPage() {
                                         <div className="ml-4">
                                             <h4 className="text-lg font-semibold text-gray-900">Telepon / Fax</h4>
                                             <p className="mt-1 text-gray-600">
-                                                (0357) 881061 / 0813-3070-7048
+                                                {phone}
                                             </p>
                                         </div>
                                     </div>
@@ -67,7 +79,7 @@ export default function ContactPage() {
                                         <div className="ml-4">
                                             <h4 className="text-lg font-semibold text-gray-900">Email</h4>
                                             <p className="mt-1 text-gray-600">
-                                                info@mtsn1pacitan.sch.id
+                                                {email}
                                             </p>
                                         </div>
                                     </div>
@@ -90,7 +102,7 @@ export default function ContactPage() {
                             {/* Embedded Map */}
                             <div className="rounded-xl overflow-hidden shadow-lg border border-gray-200 h-[300px]">
                                 <iframe
-                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.355152562477!2d111.0965383147775!3d-8.19757659409895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7961b7b7a60b09%3A0xe5f9b8b8b8b8b8b8!2sMTsN%20Pacitan!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid"
+                                    src={mapUrl}
                                     width="100%"
                                     height="100%"
                                     style={{ border: 0 }}

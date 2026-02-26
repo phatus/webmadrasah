@@ -72,6 +72,7 @@ const MENU_GROUPS = [
                     { label: 'Ekstrakurikuler', route: '/dashboard/ekstrakurikuler', icon: Target },
                     { label: 'Program Unggulan', route: '/dashboard/kesiswaan/program', icon: Target },
                     { label: 'Prestasi', route: '/dashboard/kesiswaan/prestasi', icon: Trophy },
+                    { label: 'Lomba & Kompetisi', route: '/dashboard/competitions', icon: Trophy }, // Added Competitions
                     { label: 'Data Alumni', route: '/dashboard/alumni', icon: Users }, // Added Alumni
                 ],
             },
@@ -90,6 +91,7 @@ const MENU_GROUPS = [
                 children: [
                     { label: 'Manajemen User', route: '/dashboard/users' },
                     { label: 'Pengaturan Website', route: '/dashboard/settings' },
+                    { label: 'Peta Lokasi', route: '/dashboard/settings/location' },
                 ]
             },
         ],

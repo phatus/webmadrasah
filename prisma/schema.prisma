@@ -195,3 +195,31 @@ model Video {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Competition {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  description String?
+  image       String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  submissions CompetitionSubmission[]
+}
+
+model CompetitionSubmission {
+  id            Int      @id @default(autoincrement())
+  competitionId Int
+  competition   Competition @relation(fields: [competitionId], references: [id])
+  fullName      String
+  email         String
+  phone         String?
+  school        String?
+  workUrl       String   // e.g., YouTube link for vlog
+  status        String   @default("PENDING") // PENDING, VERIFIED, REJECTED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

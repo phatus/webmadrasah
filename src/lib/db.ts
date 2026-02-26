@@ -8,7 +8,7 @@ declare const globalThis: {
     prismaGlobalRefreshed: ReturnType<typeof prismaClientSingleton>
 } & typeof global
 
-const prisma = globalThis.prismaGlobalRefreshed ?? prismaClientSingleton()
+const prisma = (globalThis.prismaGlobalRefreshed ?? prismaClientSingleton()) as any
 
 export default prisma
 

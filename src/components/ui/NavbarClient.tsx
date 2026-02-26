@@ -80,6 +80,9 @@ export default function NavbarClient({ siteName, logoUrl }: NavbarClientProps) {
                                         <Link href="/ekstrakurikuler" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">
                                             Ekstrakurikuler
                                         </Link>
+                                        <Link href="/competitions" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">
+                                            Kompetisi & Lomba
+                                        </Link>
                                         <Link href="/alumni" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">
                                             Direktori Alumni
                                         </Link>
@@ -192,6 +195,9 @@ export default function NavbarClient({ siteName, logoUrl }: NavbarClientProps) {
                                     </Link>
                                     <Link href="/ekstrakurikuler" className="block text-sm text-gray-600 hover:text-emerald-600">
                                         Ekstrakurikuler
+                                    </Link>
+                                    <Link href="/competitions" className="block text-sm text-gray-600 hover:text-emerald-600">
+                                        Kompetisi
                                     </Link>
                                     <Link href="/alumni" className="block text-sm text-gray-600 hover:text-emerald-600">
                                         Alumni

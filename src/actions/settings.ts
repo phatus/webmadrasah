@@ -16,6 +16,7 @@ export type SettingKey =
     | 'social_instagram'
     | 'social_youtube'
     | 'headmaster_name'
+    | 'map_embed'
 
 export async function getSettings() {
     try {
@@ -53,7 +54,7 @@ export async function updateSettings(prevState: any, formData: FormData) {
         'site_name', 'site_description', 'site_logo',
         'contact_email', 'contact_phone', 'contact_address',
         'social_facebook', 'social_instagram', 'social_youtube',
-        'headmaster_name'
+        'headmaster_name', 'map_embed'
     ]
 
     for (const key of keys) {
