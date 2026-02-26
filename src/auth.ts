@@ -42,9 +42,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 if (passwordsMatch) {
                     console.log("Password match! Login successful.");
                     return {
-                        ...user,
                         id: String(user.id),
+                        name: user.name,
+                        username: user.username,
                         role: user.role,
+                        image: user.image,
                     }
                 }
 

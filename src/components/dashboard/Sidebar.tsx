@@ -102,7 +102,7 @@ export default function Sidebar({ className, userRole = "EDITOR" }: SidebarProps
     const pathname = usePathname();
 
     // Filter menu groups based on role
-    const filteredMenuGroups = MENU_GROUPS.map(group => {
+    const filteredMenuGroups = React.useMemo(() => MENU_GROUPS.map(group => {
         const filteredItems = group.menuItems.map(item => {
             // Check children recursively if needed, but for now simple filter
             if (item.children) {
@@ -122,7 +122,7 @@ export default function Sidebar({ className, userRole = "EDITOR" }: SidebarProps
         });
 
         return { ...group, menuItems: filteredItems };
-    });
+    }), [userRole]);
 
     return (
         <aside className={cn("absolute left-0 top-0 z-9999 h-screen w-72.5 flex flex-col overflow-y-hidden bg-white duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0", className)}>
@@ -136,7 +136,7 @@ export default function Sidebar({ className, userRole = "EDITOR" }: SidebarProps
                         <span className="text-2xl font-bold text-black">
                             Web Madrasah
                         </span>
-                        <span className="text-xs text-gray-500">Role: {userRole}</span>
+                        <span className="text-xs text-gray-500">Role: {userRole || 'N/A'}</span>
                     </div>
                 </Link>
             </div>
@@ -166,7 +166,7 @@ export default function Sidebar({ className, userRole = "EDITOR" }: SidebarProps
     );
 }
 
-const SidebarItem = ({ item, pathname }: { item: any; pathname: string }) => {
+const SidebarItem = ({ item, pathname }: { item: any; pathname: string | null }) => {
     const [pageName, setPageName] = useState("");
 
     const handleClick = () => {
@@ -175,6 +175,7 @@ const SidebarItem = ({ item, pathname }: { item: any; pathname: string }) => {
     };
 
     const isActive = (url: string) => {
+        if (!pathname || !url) return false;
         return pathname === url || pathname.startsWith(url);
     }
 

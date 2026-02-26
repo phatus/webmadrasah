@@ -17,8 +17,13 @@ export default async function NotificationWrapper() {
 
     if (!announcements.length) return null
 
-    const runningTexts = announcements.filter((a: any) => a.type === 'RUNNING_TEXT')
-    const popups = announcements.filter((a: any) => a.type === 'POPUP')
+    const runningTexts = announcements
+        .filter((a: any) => a.type === 'RUNNING_TEXT')
+        .map((a: any) => ({ id: a.id, content: a.content }))
+
+    const popups = announcements
+        .filter((a: any) => a.type === 'POPUP')
+        .map((a: any) => ({ id: a.id, title: a.title, content: a.content }))
 
     return (
         <>
