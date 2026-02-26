@@ -28,7 +28,7 @@ export default async function EkstrakurikulerManagerPage() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {extracurriculars && extracurriculars.length > 0 ? (
-                    extracurriculars.map((item, key) => (
+                    extracurriculars.map((item: any, key: number) => (
                         <div key={key} className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark overflow-hidden group">
                             <div className="relative h-48 w-full bg-gray-100">
                                 {item.image ? (
