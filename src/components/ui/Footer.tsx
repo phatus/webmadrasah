@@ -11,8 +11,8 @@ export default async function Footer() {
     const phone = settings['contact_phone'] || "(0357) 881303"
     const email = settings['contact_email'] || "info@mtsnpacitan.sch.id"
     const mapEmbed = settings['map_embed'] || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.465492415175!2d111.08868971077755!3d-8.198308782046467!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7961bd40e66f8d%3A0xc682da26850c905b!2sMTs%20Negeri%20Pacitan!5e0!3m2!1sen!2sid!4v1705646199464!5m2!1sen!2sid"
-    const mapUrl = mapEmbed.includes('<iframe') 
-        ? (mapEmbed.match(/src=["'](.+?)["']/)?.[1] || mapEmbed) 
+    const mapUrl = mapEmbed.includes('<iframe')
+        ? (mapEmbed.match(/src=["'](.+?)["']/)?.[1] || mapEmbed)
         : mapEmbed
 
     return (
@@ -85,7 +85,6 @@ export default async function Footer() {
                 </div>
                 <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
                     <p>&copy; {new Date().getFullYear()} MTsN 1 Pacitan. All rights reserved.</p>
-                    <p className="text-xs mt-2 text-gray-600">Server Time: {new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}</p>
                 </div>
             </div>
         </footer>
