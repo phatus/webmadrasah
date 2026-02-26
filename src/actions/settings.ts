@@ -23,7 +23,7 @@ export async function getSettings() {
         const settings = await prisma.appSetting.findMany()
         // Convert array to object for easier access
         const settingsMap: Record<string, string> = {}
-        settings.forEach(s => {
+        settings.forEach((s: any) => {
             settingsMap[s.key] = s.value
         })
         return settingsMap
