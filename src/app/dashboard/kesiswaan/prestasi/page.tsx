@@ -49,7 +49,7 @@ export default async function PrestasiPage() {
                 </div>
 
                 {achievements && achievements.length > 0 ? (
-                    achievements.map((item, key) => (
+                    achievements.map((item: any, key: number) => (
                         <div
                             className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5 items-center"
                             key={key}
