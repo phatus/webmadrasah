@@ -1,44 +1,7 @@
--- CreateTable
-CREATE TABLE "User" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "name" TEXT NOT NULL,
-    "username" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
-    "image" TEXT,
-    "bio" TEXT,
-    "role" TEXT NOT NULL DEFAULT 'EDITOR',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
-);
-
--- CreateTable
-CREATE TABLE "Category" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "name" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
-);
-
--- CreateTable
-CREATE TABLE "Post" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "title" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "excerpt" TEXT,
-    "content" TEXT NOT NULL,
-    "image" TEXT,
-    "published" BOOLEAN NOT NULL DEFAULT false,
-    "authorId" INTEGER NOT NULL,
-    "categoryId" INTEGER,
-    "metaTitle" TEXT,
-    "metaDescription" TEXT,
-    "ogImage" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "Post_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category" ("id") ON DELETE SET NULL ON UPDATE CASCADE
-);
+-- AlterTable
+ALTER TABLE "Post" ADD COLUMN "metaDescription" TEXT;
+ALTER TABLE "Post" ADD COLUMN "metaTitle" TEXT;
+ALTER TABLE "Post" ADD COLUMN "ogImage" TEXT;
 
 -- CreateTable
 CREATE TABLE "Agenda" (
@@ -225,20 +188,26 @@ CREATE TABLE "CompetitionSubmission" (
     CONSTRAINT "CompetitionSubmission_competitionId_fkey" FOREIGN KEY ("competitionId") REFERENCES "Competition" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
--- CreateIndex
+-- RedefineTables
+PRAGMA defer_foreign_keys=ON;
+PRAGMA foreign_keys=OFF;
+CREATE TABLE "new_User" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "image" TEXT,
+    "bio" TEXT,
+    "role" TEXT NOT NULL DEFAULT 'EDITOR',
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+INSERT INTO "new_User" ("createdAt", "id", "name", "password", "updatedAt", "username") SELECT "createdAt", "id", "name", "password", "updatedAt", "username" FROM "User";
+DROP TABLE "User";
+ALTER TABLE "new_User" RENAME TO "User";
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Category_slug_key" ON "Category"("slug");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Post_slug_key" ON "Post"("slug");
-
--- CreateIndex
-CREATE INDEX "Post_authorId_idx" ON "Post"("authorId");
-
--- CreateIndex
-CREATE INDEX "Post_categoryId_idx" ON "Post"("categoryId");
+PRAGMA foreign_keys=ON;
+PRAGMA defer_foreign_keys=OFF;
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Agenda_slug_key" ON "Agenda"("slug");
@@ -248,4 +217,3 @@ CREATE UNIQUE INDEX "PageContent_key_key" ON "PageContent"("key");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Competition_slug_key" ON "Competition"("slug");
-
