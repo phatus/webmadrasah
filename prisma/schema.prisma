@@ -15,7 +15,7 @@ model User {
   password  String
   image     String?
   bio       String?
-  role      String   @default("EDITOR") // "ADMIN" or "EDITOR"
+  role      String   @default("EDITOR")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   posts     Post[]
@@ -31,25 +31,22 @@ model Category {
 }
 
 model Post {
-  id          Int       @id @default(autoincrement())
-  title       String
-  slug        String    @unique
-  excerpt     String?
-  content     String
-  image       String?
-  published   Boolean   @default(false)
-  authorId    Int
-  author      User      @relation(fields: [authorId], references: [id])
-  categoryId  Int?
-  category    Category? @relation(fields: [categoryId], references: [id])
-  
-  // SEO Fields
+  id              Int       @id @default(autoincrement())
+  title           String
+  slug            String    @unique
+  excerpt         String?
+  content         String
+  image           String?
+  published       Boolean   @default(false)
+  authorId        Int
+  categoryId      Int?
   metaTitle       String?
   metaDescription String?
   ogImage         String?
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  author          User      @relation(fields: [authorId], references: [id])
+  category        Category? @relation(fields: [categoryId], references: [id])
 
   @@index([authorId])
   @@index([categoryId])
@@ -67,11 +64,11 @@ model Agenda {
 }
 
 model Download {
-  id          Int      @id @default(autoincrement())
-  title       String
-  fileUrl     String
-  category    String   @default("Umum") // e.g. "SK", "Formulir", "Rapor"
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  title     String
+  fileUrl   String
+  category  String   @default("Umum")
+  createdAt DateTime @default(now())
 }
 
 model Gallery {
@@ -79,17 +76,17 @@ model Gallery {
   title       String
   description String?
   cover       String?
-  images      String   // Stored as JSON string of array
+  images      String
   createdAt   DateTime @default(now())
 }
 
 model Teacher {
   id        Int      @id @default(autoincrement())
   name      String
-  nip       String?  // Nomor Induk Pegawai (optional)
-  position  String   // e.g. "Kepala Madrasah", "Waka Kurikulum", "Guru Mapel"
-  subject   String?  // e.g. "Matematika", "Bahasa Indonesia"
-  image     String?  // URL to image
+  nip       String?
+  position  String
+  subject   String?
+  image     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -99,7 +96,7 @@ model PageContent {
   key       String   @unique
   title     String
   content   String
-  meta      String?  // JSON string for flexible metadata (e.g. headmaster image, quote)
+  meta      String?
   updatedAt DateTime @updatedAt
 }
 
@@ -107,9 +104,9 @@ model Achievement {
   id          Int      @id @default(autoincrement())
   title       String
   description String?
-  category    String   // "Akademik" or "Non-Akademik"
-  level       String   // "Kabupaten", "Provinsi", "Nasional", "Internasional"
-  rank        String?  // "Juara 1", "Juara 2", "Gold Medal", etc.
+  category    String
+  level       String
+  rank        String?
   date        DateTime
   image       String?
   createdAt   DateTime @default(now())
@@ -121,9 +118,9 @@ model Extracurricular {
   name        String
   description String?
   image       String?
-  schedule    String?  // e.g. "Setiap Sabtu, 14.00 WIB"
-  location    String?  // e.g. "Lapangan Basket"
-  pembina     String?  // Nama Pembina
+  schedule    String?
+  location    String?
+  pembina     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -148,28 +145,28 @@ model Inquiry {
 }
 
 model Announcement {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   title     String
   content   String?
-  type      String   @default("INFO") // INFO, POPUP, RUNNING_TEXT
-  isActive  Boolean  @default(true)
+  type      String    @default("INFO")
+  isActive  Boolean   @default(true)
   expiresAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Alumni {
-  id              Int      @id @default(autoincrement())
-  name            String
-  graduationYear  Int
-  currentStatus   String?  // Kuliah, Bekerja, dll.
-  institution     String?  // Nama Universitas / Perusahaan
-  image           String?
-  phone           String?
-  email           String?
-  isVerified      Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  name           String
+  graduationYear Int
+  currentStatus  String?
+  institution    String?
+  image          String?
+  phone          String?
+  email          String?
+  isVerified     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model AppSetting {
@@ -182,69 +179,67 @@ model FeaturedProgram {
   id          Int      @id @default(autoincrement())
   title       String
   description String
-  icon        String   // Lucide icon name
-  color       String   // Color theme: "emerald", "blue", "orange", "purple", "red", "cyan"
+  icon        String
+  color       String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model Video {
-  id          Int      @id @default(autoincrement())
-  title       String
-  url         String   // YouTube URL
-  youtubeId   String   // Extracted ID
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  title     String
+  url       String
+  youtubeId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Competition {
-  id          Int      @id @default(autoincrement())
+  id          Int                     @id @default(autoincrement())
   title       String
-  slug        String   @unique
+  slug        String                  @unique
   description String?
   image       String?
   startDate   DateTime
   endDate     DateTime
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean                 @default(true)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
   submissions CompetitionSubmission[]
 }
 
 model CompetitionSubmission {
-  id            Int      @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   competitionId Int
-  competition   Competition @relation(fields: [competitionId], references: [id])
   fullName      String
   email         String
   phone         String?
   school        String?
-  workUrl       String   // e.g., YouTube link for vlog
-  status        String   @default("PENDING") // PENDING, VERIFIED, REJECTED
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  workUrl       String
+  status        String      @default("PENDING")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  competition   Competition @relation(fields: [competitionId], references: [id])
 }
 
 model RateLimit {
   id        Int      @id @default(autoincrement())
-  key       String   // e.g., "inquiry:IP_ADDRESS" or "alumni:IP_ADDRESS"
+  key       String   @unique
   count     Int      @default(1)
   resetAt   DateTime
   createdAt DateTime @default(now())
-
-  @@unique([key])
 }
 
 model AuditLog {
-  id         BigInt    @id @default(autoincrement())
-  userId     Int?      // null for guest actions like inquiry
-  action     String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, ACCESS
-  resource   String   // POST, USER, ALUMNI, SETTINGS, etc.
-  resourceId Int?     // ID of the affected resource
-  details    String?  // JSON string with before/after or metadata
+  id         BigInt   @id @default(autoincrement())
+  userId     Int?
+  action     String
+  resource   String
+  resourceId Int?
+  details    String?
   ipAddress  String?
   userAgent  String?
-  createdAt  DateTime  @default(now())
+  createdAt  DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])

@@ -50,7 +50,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: sqlite:./dev.db
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           NODE_ENV: production
 
