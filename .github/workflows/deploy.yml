@@ -42,6 +42,12 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
 
+      - name: Copy .env from production
+        run: |
+          if [ -f "/www/wwwroot/webmadrasah/.env" ]; then
+            cp /www/wwwroot/webmadrasah/.env .
+          fi
+
       - name: Install Dependencies
         if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
@@ -54,12 +60,6 @@ jobs:
           key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
-
-      - name: Copy .env from production
-        run: |
-          if [ -f "/www/wwwroot/webmadrasah/.env" ]; then
-            cp /www/wwwroot/webmadrasah/.env .
-          fi
 
       - name: Generate Prisma Client
         if: steps.npm-cache.outputs.cache-hit != 'true' || steps.filter.outputs.prisma == 'true'
