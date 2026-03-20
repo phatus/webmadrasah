@@ -60,7 +60,26 @@ export async function getAuditLogs(
     startDate?: Date
     endDate?: Date
   } = {}
-) {
+): Promise<{
+  logs: Array<{
+    id: number
+    userId: number | null
+    action: AuditAction
+    resource: AuditResource
+    resourceId: number | null
+    details: string | null
+    createdAt: Date
+    user?: {
+      id: number
+      name: string | null
+      username: string | null
+      role: string | null
+    } | null
+  }>
+  total: number
+  totalPages: number
+  currentPage: number
+}> {
   const { page = 1, limit = 50, ...filters } = options
   const skip = (page - 1) * limit
 

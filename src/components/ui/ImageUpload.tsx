@@ -109,7 +109,7 @@ export default function ImageUpload({
                     croppingValidateDimensions: true,
                 }}
             >
-                {({ open, fileExists }) => {
+                {({ open }) => {
                     const onClick = () => {
                         setError(null)
                         open()
@@ -118,7 +118,7 @@ export default function ImageUpload({
                     return (
                         <button
                             type="button"
-                            disabled={!!value || fileExists}
+                            disabled={!!value}
                             onClick={onClick}
                             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md flex items-center gap-2 border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >

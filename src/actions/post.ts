@@ -88,7 +88,7 @@ export async function createPost(formData: FormData) {
 
         // Audit log
         await logAudit({
-          userId: session.user.id,
+          userId: Number(session.user.id),
           action: 'CREATE',
           resource: 'POST',
           resourceId: post.id,
@@ -120,7 +120,7 @@ export async function deletePost(id: number) {
 
     // Audit log
     await logAudit({
-      userId: session.user.id,
+      userId: Number(session.user.id),
       action: 'DELETE',
       resource: 'POST',
       resourceId: id,
@@ -173,7 +173,7 @@ export async function updatePost(id: number, formData: FormData) {
         // Audit log
         const session = await auth()
         await logAudit({
-          userId: session?.user?.id,
+          userId: Number(session?.user?.id),
           action: 'UPDATE',
           resource: 'POST',
           resourceId: id,

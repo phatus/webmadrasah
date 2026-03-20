@@ -76,7 +76,7 @@ export async function createUser(prevState: any, formData: FormData) {
         // Audit log
         const session = await auth()
         await logAudit({
-          userId: session?.user?.id,
+          userId: Number(session?.user?.id),
           action: 'CREATE',
           resource: 'USER',
           resourceId: user.id,
@@ -126,7 +126,7 @@ export async function updateUser(id: number, prevState: any, formData: FormData)
         // Audit log
         const session = await auth()
         await logAudit({
-          userId: session?.user?.id,
+          userId: Number(session?.user?.id),
           action: 'UPDATE',
           resource: 'USER',
           resourceId: id,
@@ -152,7 +152,7 @@ export async function deleteUser(id: number) {
 
     // Audit log
     await logAudit({
-      userId: session.user.id,
+      userId: Number(session.user.id),
       action: 'DELETE',
       resource: 'USER',
       resourceId: id,
