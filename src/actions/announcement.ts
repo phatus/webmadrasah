@@ -44,7 +44,12 @@ export async function getActiveAnnouncements() {
 }
 
 export async function getAnnouncement(id: number) {
-    return await prisma.announcement.findUnique({ where: { id } })
+    try {
+        return await prisma.announcement.findUnique({ where: { id } })
+    } catch (error) {
+        console.error("Error fetching announcement:", error)
+        return null
+    }
 }
 
 export async function createAnnouncement(prevState: any, formData: FormData) {

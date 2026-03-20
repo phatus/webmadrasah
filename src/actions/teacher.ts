@@ -15,32 +15,28 @@ const TeacherSchema = z.object({
 })
 
 export async function getTeachers(query?: string) {
-    if (query) {
-        // DEBUG LOGGING
-        console.log('DEBUG: Prisma Keys:', Object.keys(prisma));
-        // @ts-ignore
-        console.log('DEBUG: Has Teacher?', !!prisma.teacher);
+    try {
+        if (query) {
+            return await prisma.teacher.findMany({
+                where: {
+                    OR: [
+                        { name: { contains: query, mode: 'insensitive' } },
+                        { subject: { contains: query, mode: 'insensitive' } },
+                        { position: { contains: query, mode: 'insensitive' } },
+                    ]
+                },
+                orderBy: { name: 'asc' }
+            })
+        }
 
         return await prisma.teacher.findMany({
-            where: {
-                OR: [
-                    { name: { contains: query } },  // SQLite specific, defaults to case-insensitive usually but can be tricky
-                    { subject: { contains: query } },
-                    { position: { contains: query } },
-                ]
-            },
             orderBy: { name: 'asc' }
         })
+    } catch (error) {
+        console.error("Error fetching teachers:", error)
+        // Return empty array instead of throwing to prevent 502
+        return []
     }
-
-    // DEBUG LOGGING
-    console.log('DEBUG: Prisma Keys:', Object.keys(prisma));
-    // @ts-ignore
-    console.log('DEBUG: Has Teacher?', !!prisma.teacher);
-
-    return await prisma.teacher.findMany({
-        orderBy: { name: 'asc' }
-    })
 }
 
 export async function createTeacher(prevState: any, formData: FormData) {

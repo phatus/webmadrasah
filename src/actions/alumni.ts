@@ -32,7 +32,12 @@ export async function getAlumni(params?: { verifiedOnly?: boolean }) {
 }
 
 export async function getAlumniById(id: number) {
-    return await prisma.alumni.findUnique({ where: { id } })
+    try {
+        return await prisma.alumni.findUnique({ where: { id } })
+    } catch (error) {
+        console.error("Error fetching alumni by ID:", error)
+        return null
+    }
 }
 
 export async function createAlumni(prevState: any, formData: FormData) {

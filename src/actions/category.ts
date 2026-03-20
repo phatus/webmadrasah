@@ -7,11 +7,16 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 export async function getCategories() {
-    const categories = await prisma.category.findMany({
-        orderBy: { name: 'asc' },
-        include: { _count: { select: { posts: true } } }
-    })
-    return categories
+    try {
+        const categories = await prisma.category.findMany({
+            orderBy: { name: 'asc' },
+            include: { _count: { select: { posts: true } } }
+        })
+        return categories
+    } catch (error) {
+        console.error("Error fetching categories:", error)
+        return []
+    }
 }
 
 export async function createCategory(formData: FormData) {

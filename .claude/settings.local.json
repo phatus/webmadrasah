@@ -19,7 +19,11 @@
       "Bash(git push:*)",
       "Bash(.github/workflows/deploy.yml:*)",
       "Bash(find . -iname *mcp* -type f)",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "Bash(curl:*)",
+      "Bash(cat prisma/migrations/*/migration.sql)",
+      "Bash(npx tsc:*)",
+      "Bash(git diff:*)"
     ]
   }
 }

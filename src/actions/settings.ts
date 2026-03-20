@@ -65,8 +65,7 @@ export async function updateSettings(prevState: any, formData: FormData) {
     }
 
     try {
-        // Prisma doesn't support bulk upsert easily in SQLite without raw query or loop
-        // Loop is fine for small number of settings
+        // Prisma doesn't support bulk upsert easily; loop is fine for small number of settings
         for (const [key, value] of Object.entries(settingsToUpdate)) {
             await prisma.appSetting.upsert({
                 where: { key },

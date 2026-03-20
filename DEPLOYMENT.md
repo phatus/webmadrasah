@@ -16,8 +16,12 @@
 
 #### 1. Environment Variables (`.env` production)
 ```env
-DATABASE_URL="file:./dev.db" # Change to PostgreSQL for production
-AUTH_SECRET="<generate-strong-secret>"
+# Supabase PostgreSQL - REQUIRED for production
+# Get connection strings from Supabase Dashboard → Settings → Database
+DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
+
+AUTH_SECRET="<generate-64-char-secret>"
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your-cloud-name"
 CLOUDINARY_API_KEY="your-api-key"
 CLOUDINARY_API_SECRET="your-api-secret"
@@ -31,9 +35,14 @@ CLOUDINARY_API_SECRET="your-api-secret"
   - Auto-optimize: enabled
   - Crop: enable
 
-#### 3. Database
-- SQLite OK for small scale (<1000 users)
-- For production: migrate to PostgreSQL (see MIGRATION.md)
+#### 3. Database (Production Requirement)
+
+**PostgreSQL is REQUIRED for production.** SQLite is for development testing only.
+
+- ✅ **Production**: Use Supabase PostgreSQL (or any PostgreSQL provider)
+- ❌ **SQLite**: NOT suitable for production - file storage issues on serverless/container environments
+
+Configure Supabase connection strings in `.env` (both `DATABASE_URL` and `DIRECT_URL` needed).
 
 #### 4. Admin User Creation
 ```bash

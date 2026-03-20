@@ -34,8 +34,10 @@ https://vercel.com/new
 # node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 AUTH_SECRET=your-generated-64-char-secret-here
 
-# For local testing, this works. For production, use PostgreSQL:
-DATABASE_URL=file:./dev.db
+# ⚠️ PRODUCTION REQUIRED: Use PostgreSQL (Supabase).
+# SQLite (file:./dev.db) does NOT persist on Vercel serverless.
+# Get from Supabase: Settings → Database → Connection String
+DATABASE_URL=postgresql://username:password@host/database
 
 # Get from Cloudinary Dashboard
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dgx0p6axm
@@ -45,7 +47,7 @@ CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 NODE_ENV=production
 ```
 
-**Note:** `file:./dev.db` works on Vercel only temporarily. For production, use PostgreSQL (see below).
+**⚠️ CRITICAL:** SQLite (`file:./dev.db`) will NOT work on Vercel production. You **must** use PostgreSQL. See "Database for Production" section below.
 
 ### Step 5: Deploy
 Click **"Deploy"** button.
@@ -77,31 +79,68 @@ After initial setup:
 
 **SQLite does NOT work on Vercel for production.**
 
-You must switch to PostgreSQL before going live with users.
+You must use Supabase PostgreSQL (recommended) or any PostgreSQL provider before going live.
 
-### Quick PostgreSQL Setup (Free):
+### Quick Setup with Supabase (Recommended - Free Tier):
 
-1. **Sign up for Neon** (recommended): https://neon.tech
-   - Free tier: 10GB storage
-   - Serverless PostgreSQL
+1. **Sign up for Supabase**: https://supabase.com
+   - Free tier: 500MB database, generous limits
+   - Built-in PostgreSQL with connection pooling
 
-2. **Create project** → Get connection string:
+2. **Create new project**:
+   - Choose a name and region (select closest to your users)
+   - Wait for provisioning (1-2 minutes)
+
+3. **Get connection strings**:
+   - Go to **Settings** → **Database** → **Connection String**
+   - Copy **"Connection pooling"** string (for `DATABASE_URL`)
+   - Copy **"Direct connection"** string (for `DIRECT_URL`)
+   - Connection format:
+     ```
+     postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true
+     ```
+
+4. **Update both `.env` and Vercel environment variables**:
+   ```env
+   DATABASE_URL="postgresql://postgres.pwkjffuaeughbzqvpala:your-password@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+   DIRECT_URL="postgresql://postgres.pwkjffuaeughbzqvpala:your-password@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
    ```
-   postgresql://username:password@host/database
-   ```
 
-3. **Update `prisma/schema.prisma`**:
+5. **Update `prisma/schema.prisma`** (if not already):
    ```diff
-   - provider = "sqlite"
-   + provider = "postgresql"
+   - datasource db {
+   -   provider = "sqlite"
+   -   url      = env("DATABASE_URL")
+   - }
+   + datasource db {
+   +   provider = "postgresql"
+   +   url      = env("DATABASE_URL")
+   + }
    ```
 
-4. **Update Vercel Environment Variable**:
-   ```
-   DATABASE_URL=postgresql://username:password@host/database
-   ```
+6. **Whitelist Vercel IPs in Supabase** (optional but recommended):
+   - Supabase Dashboard → Settings → Database → Network
+   - Add Vercel IP ranges or enable "Allow all requests" for simplicity
 
-5. **Commit and push** → Vercel will auto-deploy with PostgreSQL
+7. **Commit and push** → Vercel will auto-deploy with PostgreSQL
+
+### Alternative PostgreSQL Providers:
+
+- **Neon.tech**: Serverless PostgreSQL, free 10GB
+- **Railway**: Easy PostgreSQL service
+- **AWS RDS / DigitalOcean Managed Database**: For production scale
+
+### Important: Update Prisma Schema for PostgreSQL
+
+```bash
+# After updating prisma/schema.prisma provider to "postgresql"
+npx prisma generate
+git add prisma/schema.prisma
+git commit -m "chore: switch to PostgreSQL for production"
+git push
+```
+
+Vercel will auto-deploy with new database configuration.
 
 ---
 

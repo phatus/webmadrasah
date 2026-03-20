@@ -18,18 +18,23 @@ const PostSchema = z.object({
 export async function getPosts(page = 1, limit = 10, showUnpublished = false) {
     const skip = (page - 1) * limit
     const where = showUnpublished ? {} : { published: true }
-    const [posts, total] = await Promise.all([
-        prisma.post.findMany({
-            skip,
-            take: limit,
-            where,
-            orderBy: { createdAt: 'desc' },
-            include: { author: { select: { name: true } } }
-        }),
-        prisma.post.count({ where })
-    ])
+    try {
+        const [posts, total] = await Promise.all([
+            prisma.post.findMany({
+                skip,
+                take: limit,
+                where,
+                orderBy: { createdAt: 'desc' },
+                include: { author: { select: { name: true } } }
+            }),
+            prisma.post.count({ where })
+        ])
 
-    return { posts, total, totalPages: Math.ceil(total / limit) }
+        return { posts, total, totalPages: Math.ceil(total / limit) }
+    } catch (error) {
+        console.error("Error fetching posts:", error)
+        return { posts: [], total: 0, totalPages: 0 }
+    }
 }
 
 import { unstable_cache } from "next/cache"
@@ -43,16 +48,26 @@ export async function getCachedPosts(page = 1, limit = 10) {
 }
 
 export async function getPost(slug: string) {
-    return await prisma.post.findUnique({
-        where: { slug },
-        include: { author: { select: { name: true, image: true, bio: true } } }
-    })
+    try {
+        return await prisma.post.findUnique({
+            where: { slug },
+            include: { author: { select: { name: true, image: true, bio: true } } }
+        })
+    } catch (error) {
+        console.error("Error fetching post:", error)
+        return null
+    }
 }
 
 export async function getPostById(id: number) {
-    return await prisma.post.findUnique({
-        where: { id },
-    })
+    try {
+        return await prisma.post.findUnique({
+            where: { id },
+        })
+    } catch (error) {
+        console.error("Error fetching post by ID:", error)
+        return null
+    }
 }
 
 export async function createPost(formData: FormData) {

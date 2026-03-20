@@ -10,16 +10,21 @@ import { deleteImages } from "@/lib/cloudinary"
 // === AGENDA ===
 
 export async function getAgendas(limit?: number, showPast = false) {
-    const where = showPast ? {} : {
-        date: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
+    try {
+        const where = showPast ? {} : {
+            date: {
+                gte: new Date(new Date().setHours(0, 0, 0, 0))
+            }
         }
+        return await prisma.agenda.findMany({
+            orderBy: { date: 'asc' },
+            take: limit,
+            where
+        })
+    } catch (error) {
+        console.error("Error fetching agendas:", error)
+        return []
     }
-    return await prisma.agenda.findMany({
-        orderBy: { date: 'asc' },
-        take: limit,
-        where
-    })
 }
 
 export async function createAgenda(formData: FormData) {
@@ -38,16 +43,26 @@ export async function createAgenda(formData: FormData) {
 
     const slug = slugify(title, { lower: true, strict: true }) + '-' + Date.now()
 
-    await prisma.agenda.create({
-        data: { title, slug, date, location, description }
-    })
+    try {
+        await prisma.agenda.create({
+            data: { title, slug, date, location, description }
+        })
+    } catch (error) {
+        console.error("Error creating agenda:", error)
+        return { error: "Gagal membuat agenda" }
+    }
 
     revalidatePath("/dashboard/agendas")
     redirect("/dashboard/agendas")
 }
 
 export async function deleteAgenda(id: number) {
-    await prisma.agenda.delete({ where: { id } })
+    try {
+        await prisma.agenda.delete({ where: { id } })
+    } catch (error) {
+        console.error("Error deleting agenda:", error)
+        return
+    }
     revalidatePath("/dashboard/agendas")
     revalidatePath("/")
     revalidatePath("/agenda")
@@ -57,7 +72,12 @@ export async function deleteAgenda(id: number) {
 // === DOWNLOAD ===
 
 export async function getDownloads() {
-    return await prisma.download.findMany({ orderBy: { createdAt: 'desc' } })
+    try {
+        return await prisma.download.findMany({ orderBy: { createdAt: 'desc' } })
+    } catch (error) {
+        console.error("Error fetching downloads:", error)
+        return []
+    }
 }
 
 export async function createDownload(formData: FormData) {
@@ -70,16 +90,26 @@ export async function createDownload(formData: FormData) {
 
     if (!fileUrl) return { error: "File required" }
 
-    await prisma.download.create({
-        data: { title, fileUrl, category }
-    })
+    try {
+        await prisma.download.create({
+            data: { title, fileUrl, category }
+        })
+    } catch (error) {
+        console.error("Error creating download:", error)
+        return { error: "Gagal membuat download" }
+    }
 
     revalidatePath("/dashboard/downloads")
     redirect("/dashboard/downloads")
 }
 
 export async function deleteDownload(id: number) {
-    await prisma.download.delete({ where: { id } })
+    try {
+        await prisma.download.delete({ where: { id } })
+    } catch (error) {
+        console.error("Error deleting download:", error)
+        return
+    }
     revalidatePath("/dashboard/downloads")
     revalidatePath("/download")
 }
@@ -88,11 +118,21 @@ export async function deleteDownload(id: number) {
 // === GALLERY ===
 
 export async function getGalleries() {
-    return await prisma.gallery.findMany({ orderBy: { createdAt: 'desc' } })
+    try {
+        return await prisma.gallery.findMany({ orderBy: { createdAt: 'desc' } })
+    } catch (error) {
+        console.error("Error fetching galleries:", error)
+        return []
+    }
 }
 
 export async function getGallery(id: number) {
-    return await prisma.gallery.findUnique({ where: { id } })
+    try {
+        return await prisma.gallery.findUnique({ where: { id } })
+    } catch (error) {
+        console.error("Error fetching gallery:", error)
+        return null
+    }
 }
 
 export async function createGallery(formData: FormData) {
@@ -106,14 +146,19 @@ export async function createGallery(formData: FormData) {
     // Simplified: Just use 'images' input which is a JSON string from the client
     const imagesJson = formData.get("images") as string
 
-    await prisma.gallery.create({
-        data: {
-            title,
-            description,
-            cover,
-            images: imagesJson || "[]"
-        }
-    })
+    try {
+        await prisma.gallery.create({
+            data: {
+                title,
+                description,
+                cover,
+                images: imagesJson || "[]"
+            }
+        })
+    } catch (error) {
+        console.error("Error creating gallery:", error)
+        return { error: "Gagal membuat gallery" }
+    }
 
     revalidatePath("/dashboard/galleries")
     redirect("/dashboard/galleries")
@@ -128,38 +173,48 @@ export async function updateGallery(id: number, formData: FormData) {
     const cover = formData.get("cover") as string
     const imagesJson = formData.get("images") as string
 
-    await prisma.gallery.update({
-        where: { id },
-        data: {
-            title,
-            description,
-            cover,
-            images: imagesJson || "[]"
-        }
-    })
+    try {
+        await prisma.gallery.update({
+            where: { id },
+            data: {
+                title,
+                description,
+                cover,
+                images: imagesJson || "[]"
+            }
+        })
+    } catch (error) {
+        console.error("Error updating gallery:", error)
+        return { error: "Gagal update gallery" }
+    }
 
     revalidatePath("/dashboard/galleries")
     redirect("/dashboard/galleries")
 }
 
 export async function deleteGallery(id: number) {
-    const gallery = await prisma.gallery.findUnique({ where: { id } });
+    try {
+        const gallery = await prisma.gallery.findUnique({ where: { id } });
 
-    if (gallery) {
-        if (gallery.images) {
-            try {
-                const images = JSON.parse(gallery.images) as string[];
-                await deleteImages(images);
-            } catch (e) {
-                console.error("Failed to parse images json", e)
+        if (gallery) {
+            if (gallery.images) {
+                try {
+                    const images = JSON.parse(gallery.images) as string[];
+                    await deleteImages(images);
+                } catch (e) {
+                    console.error("Failed to parse images json", e)
+                }
+            }
+            if (gallery.cover) {
+                await deleteImages([gallery.cover]);
             }
         }
-        if (gallery.cover) {
-            await deleteImages([gallery.cover]);
-        }
-    }
 
-    await prisma.gallery.delete({ where: { id } })
+        await prisma.gallery.delete({ where: { id } })
+    } catch (error) {
+        console.error("Error deleting gallery:", error)
+        return { error: "Gagal menghapus gallery" }
+    }
     revalidatePath("/dashboard/galleries")
     revalidatePath("/galeri")
 }

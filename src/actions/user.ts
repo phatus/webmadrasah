@@ -23,11 +23,21 @@ const UserSchema = z.object({
 })
 
 export async function getUsers() {
-    return await prisma.user.findMany({ orderBy: { createdAt: 'desc' } })
+    try {
+        return await prisma.user.findMany({ orderBy: { createdAt: 'desc' } })
+    } catch (error) {
+        console.error("Error fetching users:", error)
+        return []
+    }
 }
 
 export async function getUser(id: number) {
-    return await prisma.user.findUnique({ where: { id } })
+    try {
+        return await prisma.user.findUnique({ where: { id } })
+    } catch (error) {
+        console.error("Error fetching user:", error)
+        return null
+    }
 }
 
 export async function createUser(prevState: any, formData: FormData) {

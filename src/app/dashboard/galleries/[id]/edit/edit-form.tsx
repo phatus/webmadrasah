@@ -2,7 +2,7 @@
 
 import { updateGallery } from "@/actions/academic"
 import { useFormStatus } from "react-dom"
-import { useState } from "react"
+import { useActionState, useState } from "react"
 import ImageUpload from "@/components/ui/ImageUpload"
 import { CldUploadWidget } from "next-cloudinary"
 import { Plus, X, Save } from "lucide-react"
@@ -43,6 +43,8 @@ export default function EditGalleryForm({ gallery }: EditGalleryFormProps) {
     const [images, setImages] = useState<string[]>(initialImages)
 
     const updateWithId = updateGallery.bind(null, gallery.id)
+    // @ts-ignore - Server Action type compatibility
+    const [state, formAction] = useActionState(updateWithId, null as any)
 
     const addImage = (url: string) => {
         setImages(prev => [...prev, url])
@@ -53,7 +55,7 @@ export default function EditGalleryForm({ gallery }: EditGalleryFormProps) {
     }
 
     return (
-        <form action={updateWithId} className="space-y-6">
+        <form action={formAction} className="space-y-6">
 
             {/* Hidden inputs */}
             <input type="hidden" name="images" value={JSON.stringify(images)} />
