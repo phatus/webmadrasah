@@ -67,6 +67,29 @@ jobs:
         if: steps.npm-cache.outputs.cache-hit != 'true' || steps.filter.outputs.prisma == 'true'
         run: npx prisma generate
 
+      - name: Backup Database
+        if: steps.filter.outputs.prisma == 'true'
+        run: |
+          echo "Creating database backup..."
+          BACKUP_DIR="/www/backup/webmadrasah/db"
+          mkdir -p "$BACKUP_DIR"
+          BACKUP_FILE="$BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).sql"
+
+          # Try pg_dump if available
+          if command -v pg_dump &> /dev/null; then
+            echo "Using pg_dump to create backup at $BACKUP_FILE"
+            pg_dump --no-owner --no-acl $DATABASE_URL > "$BACKUP_FILE"
+            echo "✅ Backup created: $(ls -lh "$BACKUP_FILE")"
+          else
+            echo "⚠️  pg_dump not found. Skipping backup."
+            echo "   Install PostgreSQL client tools for automated backups."
+          fi
+
+          # Keep only last 7 backups
+          cd "$BACKUP_DIR"
+          ls -t backup-*.sql 2>/dev/null | tail -n +8 | xargs -r rm
+          echo "✅ Backup cleanup complete (keeping last 7 backups)"
+
       - name: Run Database Migrations
         if: steps.filter.outputs.prisma == 'true'
         run: npx prisma migrate deploy
