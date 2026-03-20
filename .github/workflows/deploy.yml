@@ -71,24 +71,40 @@ jobs:
         if: steps.filter.outputs.prisma == 'true'
         run: |
           echo "Creating database backup..."
-          BACKUP_DIR="/www/backup/webmadrasah/db"
+
+          # Check if pg_dump is available
+          if ! command -v pg_dump &> /dev/null; then
+            echo "⚠️  pg_dump not found. Skipping backup."
+            echo "   Install PostgreSQL client: 'sudo apt-get install postgresql-client'"
+            exit 0
+          fi
+
+          # Use a location inside the app directory that's already writable
+          BACKUP_DIR=".backup/db"
           mkdir -p "$BACKUP_DIR"
           BACKUP_FILE="$BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).sql"
 
-          # Try pg_dump if available
-          if command -v pg_dump &> /dev/null; then
-            echo "Using pg_dump to create backup at $BACKUP_FILE"
-            pg_dump --no-owner --no-acl $DATABASE_URL > "$BACKUP_FILE"
+          echo "📦 Creating backup at $BACKUP_FILE..."
+          if pg_dump --no-owner --no-acl $DATABASE_URL > "$BACKUP_FILE" 2>&1; then
             echo "✅ Backup created: $(ls -lh "$BACKUP_FILE")"
-          else
-            echo "⚠️  pg_dump not found. Skipping backup."
-            echo "   Install PostgreSQL client tools for automated backups."
-          fi
 
-          # Keep only last 7 backups
-          cd "$BACKUP_DIR"
-          ls -t backup-*.sql 2>/dev/null | tail -n +8 | xargs -r rm
-          echo "✅ Backup cleanup complete (keeping last 7 backups)"
+            # Also copy to /www/backup if it exists and is writable (optional)
+            if [ -w "/www/backup" ]; then
+              sudo mkdir -p "/www/backup/webmadrasah/db" 2>/dev/null || true
+              if [ -d "/www/backup/webmadrasah/db" ]; then
+                sudo cp "$BACKUP_FILE" "/www/backup/webmadrasah/db/"
+                echo "✅ Backup also saved to /www/backup/webmadrasah/db/"
+              fi
+            fi
+
+            # Keep only last 7 backups in app directory
+            ls -t "$BACKUP_DIR"/backup-*.sql 2>/dev/null | tail -n +8 | xargs -r rm
+            echo "✅ Old backups cleaned (keeping last 7 in $BACKUP_DIR)"
+          else
+            echo "❌ pg_dump failed. Check DATABASE_URL and connectivity."
+            rm -f "$BACKUP_FILE"
+            exit 1
+          fi
 
       - name: Run Database Migrations
         if: steps.filter.outputs.prisma == 'true'
