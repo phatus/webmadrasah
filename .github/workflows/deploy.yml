@@ -67,9 +67,9 @@ jobs:
         if: steps.npm-cache.outputs.cache-hit != 'true' || steps.filter.outputs.prisma == 'true'
         run: npx prisma generate
 
-      - name: Push Database Changes
+      - name: Run Database Migrations
         if: steps.filter.outputs.prisma == 'true'
-        run: npx prisma db push --accept-data-loss
+        run: npx prisma migrate deploy
 
       - name: Build Application
         if: steps.filter.outputs.src == 'true'
