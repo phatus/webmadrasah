@@ -8,7 +8,18 @@
       "Bash(npm audit:*)",
       "Bash(mv \"/mnt/d/agus widi/belajar code/webmadrsah\"/* \"/mnt/d/agus widi/belajar code/webmadrasah/\"/)",
       "Bash(rmdir \"/mnt/d/agus widi/belajar code/webmadrsah\")",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(psql --version)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(docker:*)",
+      "Bash(tsx:*)",
+      "Bash(npx tsx:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(.github/workflows/deploy.yml:*)",
+      "Bash(find . -iname *mcp* -type f)",
+      "Bash(gh:*)"
     ]
   }
 }

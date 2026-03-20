@@ -1,66 +1,93 @@
-name: Deploy to Production Server
+name: Deploy to Live Server
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: 🔧 Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-    - name: 📦 Install dependencies
-      run: npm ci
+      - name: Identify Changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            package:
+              - 'package-lock.json'
+            prisma:
+              - 'prisma/schema.prisma'
+            src:
+              - 'src/**'
+              - 'public/**'
+              - 'next.config.ts'
+              - 'next.config.js'
+              - 'package.json'
+              - '.github/workflows/deploy.yml'
 
-    - name: 🔨 Generate Prisma Client
-      run: npx prisma generate
+      # Cache node_modules on self-hosted runner (biggest speedup)
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
 
-    - name: 🏗️ Build application
-      run: npm run build
+      - name: Install Dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
 
-    - name: 🚀 Deploy to Server via SSH
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        script: |
-          cd /www/wwwroot/webmadrasah || exit 1
-          if [ -d .git ]; then git pull origin main; else echo "No .git"; fi
-          npm ci --only=production
-          if [ ! -f .env ]; then
-            cat > .env << ENVEOF
-DATABASE_URL=${ secrets.DATABASE_URL }
-AUTH_SECRET=${ secrets.AUTH_SECRET }
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }
-CLOUDINARY_API_KEY=${ secrets.CLOUDINARY_API_KEY }
-CLOUDINARY_API_SECRET=${ secrets.CLOUDINARY_API_SECRET }
-NODE_ENV=production
-PORT=3001
-ENVEOF
+      # Cache .next/cache for faster rebuilds
+      - name: Cache Next.js Build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+
+      - name: Copy .env from production
+        run: |
+          if [ -f "/www/wwwroot/webmadrasah/.env" ]; then
+            cp /www/wwwroot/webmadrasah/.env .
           fi
-          if command -v pm2 &> /dev/null; then
-            pm2 restart webmadrasah || pm2 start "npm start" --name webmadrasah
-            pm2 save
-          else
-            npm install -g pm2
-            pm2 start "npm start" --name webmadrasah
-            pm2 save
-          fi
-          echo "✅ Deployed!"
 
-    - name: ✅ Done
-      run: echo "Deployment complete! Check https://mtsn1pacitan.sch.id"
+      - name: Generate Prisma Client
+        if: steps.npm-cache.outputs.cache-hit != 'true' || steps.filter.outputs.prisma == 'true'
+        run: npx prisma generate
+
+      - name: Push Database Changes
+        if: steps.filter.outputs.prisma == 'true'
+        run: npx prisma db push --accept-data-loss
+
+      - name: Build Application
+        if: steps.filter.outputs.src == 'true'
+        run: npm run build
+
+      - name: Deploy to Production
+        if: steps.filter.outputs.src == 'true'
+        run: |
+          # Sync standalone (quiet, fast)
+          sudo /usr/bin/rsync -rltz --inplace --chown=www:www .next/standalone/ /www/wwwroot/webmadrasah/
+          
+          # Sync static assets
+          sudo /usr/bin/mkdir -p /www/wwwroot/webmadrasah/.next/static
+          sudo /usr/bin/rsync -rltz --inplace --delete --chown=www:www .next/static/ /www/wwwroot/webmadrasah/.next/static/
+          
+          # Sync public (exclude uploads)
+          sudo /usr/bin/rsync -rltz --inplace --delete --exclude 'uploads' --chown=www:www public/ /www/wwwroot/webmadrasah/public/
+
+      - name: Restart Application
+        if: steps.filter.outputs.src == 'true'
+        run: |
+          cd /www/wwwroot/webmadrasah
+          pm2 restart webmadrasah || pm2 start server.js --name "webmadrasah"
