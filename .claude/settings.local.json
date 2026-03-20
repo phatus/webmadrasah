@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(npx prisma:*)",
+      "Bash(\"D:\\\\agus widi\\\\belajar:*)",
+      "Bash(npm audit:*)",
+      "Bash(mv \"/mnt/d/agus widi/belajar code/webmadrsah\"/* \"/mnt/d/agus widi/belajar code/webmadrasah/\"/)",
+      "Bash(rmdir \"/mnt/d/agus widi/belajar code/webmadrsah\")"
+    ]
+  }
+}

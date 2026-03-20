@@ -3,7 +3,9 @@
 import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
-import { auth } from "@/auth" // Assuming auth is needed for admin actions
+import { auth } from "@/auth"
+import { checkRateLimit } from "@/lib/rate-limit"
+import { logAudit } from "@/lib/audit"
 
 const InquirySchema = z.object({
     name: z.string().min(2, "Nama minimal 2 karakter"),
@@ -13,9 +15,18 @@ const InquirySchema = z.object({
 })
 
 export async function createInquiry(prevState: any, formData: FormData) {
+    const rawEmail = formData.get("email")?.toString() || "unknown"
+    const email = String(rawEmail).trim()
+
+    // Rate limiting: check before validation
+    const rateLimitAllowed = await checkRateLimit(email, 'inquiry')
+    if (!rateLimitAllowed) {
+        return { error: "Terlalu banyak permintaan. Silakan coba lagi dalam 15 menit." }
+    }
+
     const rawData = {
         name: formData.get("name")?.toString() || "",
-        email: formData.get("email")?.toString() || "",
+        email: email,
         subject: formData.get("subject")?.toString() || "",
         message: formData.get("message")?.toString() || "",
     }
@@ -29,7 +40,7 @@ export async function createInquiry(prevState: any, formData: FormData) {
     }
 
     try {
-        await prisma.inquiry.create({
+        const inquiry = await prisma.inquiry.create({
             data: {
                 name: validated.data.name,
                 email: validated.data.email,
@@ -37,8 +48,18 @@ export async function createInquiry(prevState: any, formData: FormData) {
                 message: validated.data.message,
             }
         })
+
+        // Audit log (guest action - userId null)
+        await logAudit({
+          action: 'CREATE',
+          resource: 'INQUIRY',
+          resourceId: inquiry.id,
+          details: { name: inquiry.name, email: inquiry.email, subject: inquiry.subject }
+        })
+
         return { success: true, message: "Pesan Anda telah terkirim!" }
     } catch (error) {
+        console.error("Failed to create inquiry:", error)
         return {
             error: "Gagal mengirim pesan. Silakan coba lagi."
         }

@@ -223,3 +223,29 @@ model CompetitionSubmission {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model RateLimit {
+  id        Int      @id @default(autoincrement())
+  key       String   // e.g., "inquiry:IP_ADDRESS" or "alumni:IP_ADDRESS"
+  count     Int      @default(1)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([key])
+}
+
+model AuditLog {
+  id         BigInt    @id @default(autoincrement())
+  userId     Int?      // null for guest actions like inquiry
+  action     String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, ACCESS
+  resource   String   // POST, USER, ALUMNI, SETTINGS, etc.
+  resourceId Int?     // ID of the affected resource
+  details    String?  // JSON string with before/after or metadata
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([resource])
+}

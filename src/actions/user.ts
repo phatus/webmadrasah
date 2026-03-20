@@ -6,11 +6,17 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { logAudit } from "@/lib/audit"
 
 const UserSchema = z.object({
     name: z.string().min(1, "Nama wajib diisi"),
     username: z.string().min(3, "Username minimal 3 karakter"),
-    password: z.string().min(6, "Password minimal 6 karakter").optional(),
+    password: z.string()
+        .min(12, "Password minimal 12 karakter")
+        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/, {
+            message: "Password harus mengandung huruf kecil, huruf besar, angka, dan karakter khusus (@$!%*?&)"
+        })
+        .optional(),
     bio: z.string().optional(),
     image: z.string().optional(),
     role: z.string().default("EDITOR"),
@@ -56,7 +62,7 @@ export async function createUser(prevState: any, formData: FormData) {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     try {
-        await prisma.user.create({
+        const user = await prisma.user.create({
             data: {
                 name,
                 username,
@@ -66,7 +72,18 @@ export async function createUser(prevState: any, formData: FormData) {
                 role
             }
         })
+
+        // Audit log
+        const session = await auth()
+        await logAudit({
+          userId: session?.user?.id,
+          action: 'CREATE',
+          resource: 'USER',
+          resourceId: user.id,
+          details: { username, role, name }
+        })
     } catch (error) {
+        console.error("Failed to create user:", error)
         return { error: "Gagal membuat user" }
     }
 
@@ -105,7 +122,18 @@ export async function updateUser(id: number, prevState: any, formData: FormData)
             where: { id },
             data: updateData
         })
+
+        // Audit log
+        const session = await auth()
+        await logAudit({
+          userId: session?.user?.id,
+          action: 'UPDATE',
+          resource: 'USER',
+          resourceId: id,
+          details: { updatedFields: Object.keys(updateData) }
+        })
     } catch (error) {
+        console.error("Failed to update user:", error)
         return { error: "Gagal mengupdate user" }
     }
 
@@ -117,9 +145,19 @@ export async function deleteUser(id: number) {
     const session = await auth()
     if (!session || !session.user || session.user.role !== "ADMIN") throw new Error("Unauthorized: Admins only")
 
-    // Prevent deleting self (optional but recommended safety)
-    // if (session.user.id === id.toString()) return { error: "Cannot delete yourself" }
+    // Get user info before delete for audit
+    const userToDelete = await prisma.user.findUnique({ where: { id }, select: { username: true, name: true } })
 
     await prisma.user.delete({ where: { id } })
+
+    // Audit log
+    await logAudit({
+      userId: session.user.id,
+      action: 'DELETE',
+      resource: 'USER',
+      resourceId: id,
+      details: userToDelete ? { deletedUser: userToDelete.username, name: userToDelete.name } : undefined
+    })
+
     revalidatePath("/dashboard/users")
 }

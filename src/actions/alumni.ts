@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 import { auth } from "@/auth"
+import { checkRateLimit } from "@/lib/rate-limit"
 
 const AlumniSchema = z.object({
     name: z.string().min(2, "Nama minimal 2 karakter"),
@@ -39,13 +40,24 @@ export async function createAlumni(prevState: any, formData: FormData) {
     const session = await auth()
     const isAdmin = !!session
 
+    const rawEmail = formData.get("email")?.toString() || "unknown"
+    const email = String(rawEmail).trim()
+
+    // Rate limiting: only for public registrations
+    if (!isAdmin) {
+        const rateLimitAllowed = await checkRateLimit(email, 'alumni')
+        if (!rateLimitAllowed) {
+            return { error: "Terlalu banyak pendaftaran. Silakan coba lagi dalam 15 menit." }
+        }
+    }
+
     const rawData = {
         name: formData.get("name")?.toString() || "",
         graduationYear: formData.get("graduationYear"),
         currentStatus: formData.get("currentStatus")?.toString() || "",
         institution: formData.get("institution")?.toString() || "",
         phone: formData.get("phone")?.toString() || "",
-        email: formData.get("email")?.toString() || "",
+        email: email,
         image: formData.get("image")?.toString() || undefined,
         isVerified: isAdmin ? (formData.get("isVerified") === "on") : false, // Public submission is always unverified
     }
@@ -66,6 +78,7 @@ export async function createAlumni(prevState: any, formData: FormData) {
         }
 
     } catch (error) {
+        console.error("Failed to create alumni:", error)
         return { error: "Gagal menyimpan data alumni" }
     }
 

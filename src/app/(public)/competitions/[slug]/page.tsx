@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Calendar, Trophy, ChevronRight, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import CompetitionSubmissionForm from '@/components/forms/CompetitionSubmissionForm';
 import Link from 'next/link';
+import DOMPurify from 'isomorphic-dompurify';
 
 export default async function CompetitionDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -71,7 +72,7 @@ export default async function CompetitionDetailPage({ params }: { params: Promis
                                     </h3>
                                     <div
                                         className="text-gray-700 leading-relaxed space-y-4"
-                                        dangerouslySetInnerHTML={{ __html: competition.description || 'Tidak ada deskripsi tersedia.' }}
+                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(competition.description || 'Tidak ada deskripsi tersedia.') }}
                                     />
                                 </div>
                             </div>

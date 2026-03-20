@@ -6,6 +6,7 @@ import slugify from "slugify"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
+import { logAudit } from "@/lib/audit"
 
 const PostSchema = z.object({
     title: z.string().min(3),
@@ -69,7 +70,7 @@ export async function createPost(formData: FormData) {
     const slug = slugify(title, { lower: true, strict: true }) + '-' + Date.now()
 
     try {
-        await prisma.post.create({
+        const post = await prisma.post.create({
             data: {
                 title,
                 slug,
@@ -84,8 +85,17 @@ export async function createPost(formData: FormData) {
                 ogImage: formData.get("ogImage") as string,
             }
         })
+
+        // Audit log
+        await logAudit({
+          userId: session.user.id,
+          action: 'CREATE',
+          resource: 'POST',
+          resourceId: post.id,
+          details: { title, published: post.published, authorId: post.authorId }
+        })
     } catch (err) {
-        console.error(err)
+        console.error("Failed to create post:", err)
         return { error: "Failed to create post" }
     }
 
@@ -99,7 +109,24 @@ export async function deletePost(id: number) {
     const session = await auth()
     if (!session) throw new Error("Unauthorized")
 
+    // Check ownership (admin can delete any, editor only own)
+    const post = await prisma.post.findUnique({ where: { id } })
+    if (!post) throw new Error("Post not found")
+    if (session.user.role !== 'ADMIN' && post.authorId !== Number(session.user.id)) {
+        throw new Error("Unauthorized: You can only delete your own posts")
+    }
+
     await prisma.post.delete({ where: { id } })
+
+    // Audit log
+    await logAudit({
+      userId: session.user.id,
+      action: 'DELETE',
+      resource: 'POST',
+      resourceId: id,
+      details: { title: post.title, authorId: post.authorId }
+    })
+
     revalidatePath('/')
     revalidatePath('/dashboard/posts')
     revalidatePath('/berita')
@@ -108,6 +135,13 @@ export async function deletePost(id: number) {
 export async function updatePost(id: number, formData: FormData) {
     const session = await auth()
     if (!session) redirect("/api/auth/signin")
+
+    // Check ownership
+    const post = await prisma.post.findUnique({ where: { id } })
+    if (!post) return { error: "Post not found" }
+    if (session.user.role !== 'ADMIN' && post.authorId !== Number(session.user.id)) {
+        return { error: "Unauthorized: You can only edit your own posts" }
+    }
 
     const title = formData.get("title") as string
     const content = formData.get("content") as string
@@ -120,7 +154,7 @@ export async function updatePost(id: number, formData: FormData) {
     const slug = slugify(title, { lower: true, strict: true })
 
     try {
-        await prisma.post.update({
+        const post = await prisma.post.update({
             where: { id },
             data: {
                 title,
@@ -135,8 +169,18 @@ export async function updatePost(id: number, formData: FormData) {
                 ogImage: formData.get("ogImage") as string,
             }
         })
+
+        // Audit log
+        const session = await auth()
+        await logAudit({
+          userId: session?.user?.id,
+          action: 'UPDATE',
+          resource: 'POST',
+          resourceId: id,
+          details: { title, published: post.published }
+        })
     } catch (err) {
-        console.error(err)
+        console.error("Failed to update post:", err)
         return { error: "Failed to update post" }
     }
 

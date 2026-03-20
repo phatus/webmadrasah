@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, Trophy, Users } from 'lucide-react';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface CompetitionProps {
     id: number;
@@ -80,7 +81,13 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
                     {competition.description && (
                         <div
                             className="text-sm text-gray-600 line-clamp-3 mb-4 prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: competition.description.length > 150 ? competition.description.substring(0, 150) + '...' : competition.description }}
+                            dangerouslySetInnerHTML={{
+                                __html: DOMPurify.sanitize(
+                                    competition.description.length > 150
+                                        ? competition.description.substring(0, 150) + '...'
+                                        : competition.description
+                                )
+                            }}
                         />
                     )}
                 </div>

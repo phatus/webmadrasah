@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { Calendar, User, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import parse from 'html-react-parser'
+import DOMPurify from 'isomorphic-dompurify'
 import ShareButtons from "@/components/ui/ShareButtons"
 import DisqusComments from "@/components/ui/DisqusComments"
 
@@ -94,7 +95,7 @@ export default async function NewsDetailPage({ params }: Props) {
 
                         {/* Content */}
                         <div className="prose prose-lg prose-emerald max-w-none prose-img:rounded-xl">
-                            {parse(post.content)}
+                            {parse(DOMPurify.sanitize(post.content))}
                         </div>
 
                         {/* Share Buttons */}

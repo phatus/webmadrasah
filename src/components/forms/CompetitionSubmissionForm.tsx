@@ -120,9 +120,12 @@ export default function CompetitionSubmissionForm({ competitionId, competitionTi
                             required
                             placeholder="https://..."
                             className="w-full h-14 rounded-2xl border-2 border-slate-50 bg-slate-50/50 px-5 text-sm font-medium outline-none transition-all placeholder:text-slate-300 focus:border-emerald-500 focus:bg-white focus:ring-[6px] focus:ring-emerald-50/50"
+                            pattern="https://.*"
+                            title="URL harus dimulai dengan https://"
                         />
                         <p className="text-[10px] text-slate-400 mt-2 px-1 italic">
-                            * Pastikan pengaturan akses link ke <strong>Public</strong> agar juri bisa melihat karya Anda.
+                            * Pastikan pengaturan akses link ke <strong>Public</strong> agar juri bisa melihat karya Anda.<br/>
+                            * URL harus dimulai dengan https://
                         </p>
                     </div>
                 </div>
