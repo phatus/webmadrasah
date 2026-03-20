@@ -1,138 +1,66 @@
-name: Deploy to Production
+name: Deploy to Production Server
 
 on:
   push:
-    branches:
-      - main  # Deploy when pushing to main branch
-  pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - synchronize
-      - reopened
-
-env:
-  NODE_VERSION: '20'
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  test-and-build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linting
-        run: npm run lint
-        continue-on-error: true  # Don't fail on lint errors for now
-
-      - name: Type check
-        run: npx tsc --noEmit
-        continue-on-error: true
-
-      - name: Run Prisma generate
-        run: npx prisma generate
-
-      - name: Run tests (if any)
-        run: npm test --if-present
-
-      - name: Build application
-        run: npm run build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
-          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: build-output
-          path: |
-            .next/
-            public/
-            package.json
-            next.config.ts
-            tsconfig.json
-          retention-days: 7
-
   deploy:
-    needs: test-and-build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+    - name: 📦 Install dependencies
+      run: npm ci
 
-      - name: Build application
-        run: npm run build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
-          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+    - name: 🔨 Generate Prisma Client
+      run: npx prisma generate
 
-      # Option 1: Deploy to Vercel (Recommended for Next.js)
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v20
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          vercel-org-id: ${{ secrets.ORG_ID }}  # Your Vercel org ID
-          vercel-project-id: ${{ secrets.PROJECT_ID }}  # Your Vercel project ID
-          working-directory: ./
-          scope: ${{ secrets.ORG_ID }}
+    - name: 🏗️ Build application
+      run: npm run build
 
-      # Option 2: Deploy to Railway (uncomment if using Railway)
-      # - name: Deploy to Railway
-      #   run: |
-      #     npm i -g @railway/cli
-      #     railway up
-      #   env:
-      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    - name: 🚀 Deploy to Server via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd /www/wwwroot/webmadrasah || exit 1
+          if [ -d .git ]; then git pull origin main; else echo "No .git"; fi
+          npm ci --only=production
+          if [ ! -f .env ]; then
+            cat > .env << ENVEOF
+DATABASE_URL=${ secrets.DATABASE_URL }
+AUTH_SECRET=${ secrets.AUTH_SECRET }
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }
+CLOUDINARY_API_KEY=${ secrets.CLOUDINARY_API_KEY }
+CLOUDINARY_API_SECRET=${ secrets.CLOUDINARY_API_SECRET }
+NODE_ENV=production
+PORT=3001
+ENVEOF
+          fi
+          if command -v pm2 &> /dev/null; then
+            pm2 restart webmadrasah || pm2 start "npm start" --name webmadrasah
+            pm2 save
+          else
+            npm install -g pm2
+            pm2 start "npm start" --name webmadrasah
+            pm2 save
+          fi
+          echo "✅ Deployed!"
 
-      # Option 3: Create Docker image and push to registry
-      # - name: Build Docker image
-      #   run: |
-      #     docker build -t webmadrasah:${{ github.sha }} .
-      #     docker tag webmadrasah:${{ github.sha }} your-registry/webmadrasah:latest
-      #     docker push your-registry/webmadrasah:latest
-      #   env:
-      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Notify deployment success
-        if: success()
-        run: |
-          echo "✅ Deployment successful to production!"
-          echo "🌐 Application URL: https://mtsn1pacitan.sch.id"
-
-      - name: Notify deployment failure
-        if: failure()
-        run: |
-          echo "❌ Deployment failed!"
-          echo "Check GitHub Actions logs for details."
-          # You can add Slack/Discord notification here
+    - name: ✅ Done
+      run: echo "Deployment complete! Check https://mtsn1pacitan.sch.id"
