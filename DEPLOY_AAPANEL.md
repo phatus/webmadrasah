@@ -220,9 +220,19 @@ curl -I https://mtsn1pacitan.sch.id/berita       # Should return 200
 
 ### 502 Bad Gateway after deploy
 - **Check**: Node.js project running di aaPanel (status "Running")
-- **Check**: Port 3000 tidak digunakan aplikasi lain
+- **Check**: Port 3001 tidak digunakan aplikasi lain (sesuaikan dengan port di package.json)
 - **Check**: `npm run build` berhasil tanpa error
 - **Check**: Logs via `pm2 logs webmadrasah` untuk error spesifik
+
+### 404 Not Found pada Sub-halaman (Routing Error)
+Jika halaman utama (`/`) bisa dibuka tapi halaman lain (`/profil`, `/berita`, dll) memberikan error 404:
+- **Penyebab**: Nginx mencoba mencari file fisik di server bukannya meneruskan request ke Next.js.
+- **Solusi**: 
+  1. Buka aaPanel → **Website** → Klik Domain → **Config**.
+  2. Cari bagian `location /` dan pastikan ada `proxy_pass`.
+  3. **Hapus atau comment** baris `try_files $uri $uri/ =404;` jika ada.
+  4. Pastikan port di `proxy_pass` adalah `http://127.0.0.1:3001`.
+  5. Simpan dan restart Nginx.
 
 ### Build fails với memory error
 - Server RAM kurang (< 1GB): aktifkan SWAP di aaPanel (Settings → Swap)
