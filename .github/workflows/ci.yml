@@ -23,7 +23,7 @@ jobs:
         run: npm ci
 
       - name: Run lint
-        run: npm run lint
+        run: npm run check:style
 
       - name: Type check
         run: npx tsc --noEmit
