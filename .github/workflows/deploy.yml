@@ -143,9 +143,13 @@ jobs:
           # Sync standalone (quiet, fast)
           sudo /usr/bin/rsync -rltz --inplace --chown=www:www .next/standalone/ /www/wwwroot/webmadrasah/
 
-          # Sync static assets
+          # Sync static assets (Into root and into .next/static)
           sudo /usr/bin/mkdir -p /www/wwwroot/webmadrasah/.next/static
           sudo /usr/bin/rsync -rltz --inplace --delete --chown=www:www .next/static/ /www/wwwroot/webmadrasah/.next/static/
+          
+          # Also ensure .next/standalone/.next/static exists if server.js looks there
+          sudo /usr/bin/mkdir -p /www/wwwroot/webmadrasah/.next/standalone/.next/static
+          sudo /usr/bin/rsync -rltz --inplace --delete --chown=www:www .next/static/ /www/wwwroot/webmadrasah/.next/standalone/.next/static/
 
           # Sync public (exclude uploads)
           sudo /usr/bin/rsync -rltz --inplace --delete --exclude 'uploads' --chown=www:www public/ /www/wwwroot/webmadrasah/public/
@@ -154,4 +158,4 @@ jobs:
         if: steps.filter.outputs.src == 'true'
         run: |
           cd /www/wwwroot/webmadrasah
-          NODE_OPTIONS="--no-deprecation" pm2 restart webmadrasah || NODE_OPTIONS="--no-deprecation" pm2 start server.js --name "webmadrasah"
+          NODE_ENV=production NODE_OPTIONS="--no-deprecation" pm2 restart webmadrasah || NODE_ENV=production NODE_OPTIONS="--no-deprecation" pm2 start server.js --name "webmadrasah" --node-args="--no-deprecation"
