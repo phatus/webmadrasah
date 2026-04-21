@@ -9,10 +9,16 @@ jobs:
     runs-on: self-hosted
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      NODE_OPTIONS: "--no-deprecation"
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Ensure Cache Folders Exist
+        run: |
+          mkdir -p .next/cache
+          mkdir -p node_modules
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -34,6 +40,7 @@ jobs:
               - 'next.config.ts'
               - 'next.config.js'
               - 'package.json'
+              - 'postcss.config.js'
               - '.github/workflows/deploy.yml'
 
       # Cache node_modules on self-hosted runner (biggest speedup)
@@ -147,4 +154,4 @@ jobs:
         if: steps.filter.outputs.src == 'true'
         run: |
           cd /www/wwwroot/webmadrasah
-          pm2 restart webmadrasah || pm2 start server.js --name "webmadrasah"
+          NODE_OPTIONS="--no-deprecation" pm2 restart webmadrasah || NODE_OPTIONS="--no-deprecation" pm2 start server.js --name "webmadrasah"
