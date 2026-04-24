@@ -1,3 +1,0 @@
--- Migration: init
--- Baseline migration for existing database
--- Created: Fri, Mar 20, 2026  7:59:13 PM

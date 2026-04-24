@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -231,7 +230,7 @@ model RateLimit {
 }
 
 model AuditLog {
-  id         BigInt   @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   userId     Int?
   action     String
   resource   String
