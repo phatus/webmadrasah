@@ -5,9 +5,10 @@ import Link from 'next/link';
 export default async function NewsPage({
     searchParams,
 }: {
-    searchParams: { page?: string }
+    searchParams: Promise<{ page?: string }>
 }) {
-    const currentPage = Number(searchParams?.page) || 1;
+    const { page } = await searchParams;
+    const currentPage = Number(page) || 1;
     const limit = 9;
     const { posts, totalPages } = await getPosts(currentPage, limit);
 
