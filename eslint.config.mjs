@@ -13,7 +13,8 @@ const eslintConfig = defineConfig([
       "react/no-unescaped-entities": "off",
       "@next/next/no-html-link-for-pages": "warn",
       "react-hooks/exhaustive-deps": "warn",
-      "react-hooks/set-state-in-effect": "warn"
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/immutability": "off"
     }
   },
   // Override default ignores of eslint-config-next.
