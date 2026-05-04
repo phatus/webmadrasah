@@ -72,7 +72,11 @@ jobs:
 
       - name: Generate Prisma Client
         if: steps.npm-cache.outputs.cache-hit != 'true' || steps.filter.outputs.prisma == 'true'
-        run: npx prisma generate
+        run: |
+          if [ -f .env ]; then
+            export $(grep -v '^#' .env | xargs)
+          fi
+          npx prisma generate
 
       - name: Backup Database
         if: steps.filter.outputs.prisma == 'true'
@@ -138,7 +142,14 @@ jobs:
 
       - name: Build Application
         if: steps.filter.outputs.src == 'true'
-        run: npm run build
+        run: |
+          if [ -f .env ]; then
+            export $(grep -v '^#' .env | xargs)
+            npm run build
+          else
+            echo "❌ .env file not found. Build may fail."
+            npm run build
+          fi
 
       - name: Deploy to Production
         if: steps.filter.outputs.src == 'true'
