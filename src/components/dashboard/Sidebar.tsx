@@ -90,6 +90,7 @@ const MENU_GROUPS = [
                 route: '#',
                 children: [
                     { label: 'Manajemen User', route: '/dashboard/users' },
+                    { label: 'Audit Log', route: '/dashboard/audit' },
                     { label: 'Pengaturan Website', route: '/dashboard/settings' },
                     { label: 'Peta Lokasi', route: '/dashboard/settings/location' },
                 ]

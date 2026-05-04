@@ -62,7 +62,7 @@ export async function getAuditLogs(
   } = {}
 ): Promise<{
   logs: Array<{
-    id: number
+    id: number | string
     userId: number | null
     action: AuditAction
     resource: AuditResource
@@ -104,7 +104,7 @@ export async function getAuditLogs(
     }
   }
 
-  const [logs, total] = await Promise.all([
+  const [rawLogs, total] = await Promise.all([
     prisma.auditLog.findMany({
       where,
       skip,
@@ -123,6 +123,12 @@ export async function getAuditLogs(
     }),
     prisma.auditLog.count({ where })
   ])
+
+  // Convert BigInt IDs to Number for serialization
+  const logs = rawLogs.map((log: any) => ({
+    ...log,
+    id: Number(log.id)
+  }))
 
   return {
     logs,
