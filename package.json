@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "npx prisma generate && next build",
-    "start": "next start -p 3001",
+    "start": "node server.js",
     "check:style": "eslint .",
     "setup:dev": "tsx scripts/setup-dev.ts",
     "setup:prod": "tsx scripts/setup-production.ts",
