@@ -154,21 +154,15 @@ jobs:
       - name: Deploy to Production
         if: steps.filter.outputs.src == 'true'
         run: |
-          # Sync prisma schema (critical for database provider)
-          sudo /usr/bin/rsync -rltz --inplace --chown=www:www prisma/ /www/wwwroot/webmadrasah/prisma/
-
-          # Sync standalone (quiet, fast)
+          # 1. Sync standalone core files to root
           sudo /usr/bin/rsync -rltz --inplace --chown=www:www .next/standalone/ /www/wwwroot/webmadrasah/
 
-          # Sync static assets (Into root and into .next/static)
-          sudo /usr/bin/mkdir -p /www/wwwroot/webmadrasah/.next/static
-          sudo /usr/bin/rsync -rltz --inplace --delete --chown=www:www .next/static/ /www/wwwroot/webmadrasah/.next/static/
-          
-          # Also ensure .next/standalone/.next/static exists if server.js looks there
-          sudo /usr/bin/mkdir -p /www/wwwroot/webmadrasah/.next/standalone/.next/static
-          sudo /usr/bin/rsync -rltz --inplace --delete --chown=www:www .next/static/ /www/wwwroot/webmadrasah/.next/standalone/.next/static/
+          # 2. Sync prisma schema (for database access)
+          sudo /usr/bin/rsync -rltz --inplace --chown=www:www prisma/ /www/wwwroot/webmadrasah/prisma/
 
-          # Sync public (exclude uploads)
+          # 3. CRITICAL: Next.js standalone expects .next/static and public in the same folder as server.js
+          sudo /usr/bin/mkdir -p /www/wwwroot/webmadrasah/.next
+          sudo /usr/bin/rsync -rltz --inplace --delete --chown=www:www .next/static/ /www/wwwroot/webmadrasah/.next/static/
           sudo /usr/bin/rsync -rltz --inplace --delete --exclude 'uploads' --chown=www:www public/ /www/wwwroot/webmadrasah/public/
 
       - name: Restart Application
