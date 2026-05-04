@@ -128,7 +128,13 @@ jobs:
 
       - name: Run Database Migrations
         if: steps.filter.outputs.prisma == 'true'
-        run: npx prisma migrate deploy
+        run: |
+          if [ -f .env ]; then
+            export $(grep -v '^#' .env | xargs)
+            npx prisma migrate deploy
+          else
+            echo "⚠️  .env file not found. Skipping migrations."
+          fi
 
       - name: Build Application
         if: steps.filter.outputs.src == 'true'
