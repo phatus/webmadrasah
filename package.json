@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "npx prisma generate && next build",
-    "start": "PORT=3001 node server.js",
+    "start": "PORT=3001 node -r dotenv/config server.js",
     "check:style": "eslint .",
     "setup:dev": "tsx scripts/setup-dev.ts",
     "setup:prod": "tsx scripts/setup-production.ts",
