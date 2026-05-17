@@ -32,7 +32,7 @@ const contentSecurityPolicy = [
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://mtsn1pacitan.sch.id",
   "media-src 'self' https://res.cloudinary.com",
-  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
+  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.cloudinary.com",
   "connect-src 'self' https://*.cloudinary.com",
   "base-uri 'self'",
   "form-action 'self'"
