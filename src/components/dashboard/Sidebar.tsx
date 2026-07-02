@@ -20,6 +20,7 @@ import {
     MessageSquareQuote,
     Trophy,
     MapPin,
+    ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -72,8 +73,9 @@ const MENU_GROUPS = [
                     { label: 'Ekstrakurikuler', route: '/dashboard/ekstrakurikuler', icon: Target },
                     { label: 'Program Unggulan', route: '/dashboard/kesiswaan/program', icon: Target },
                     { label: 'Prestasi', route: '/dashboard/kesiswaan/prestasi', icon: Trophy },
-                    { label: 'Lomba & Kompetisi', route: '/dashboard/competitions', icon: Trophy }, // Added Competitions
-                    { label: 'Data Alumni', route: '/dashboard/alumni', icon: Users }, // Added Alumni
+                    { label: 'Lomba & Kompetisi', route: '/dashboard/competitions', icon: Trophy },
+                    { label: 'Data Alumni', route: '/dashboard/alumni', icon: Users },
+                    { label: 'Data Siswa', route: '/dashboard/students', icon: ShieldAlert, adminOnly: true },
                 ],
             },
             {
@@ -93,6 +95,7 @@ const MENU_GROUPS = [
                     { label: 'Audit Log', route: '/dashboard/audit' },
                     { label: 'Pengaturan Website', route: '/dashboard/settings' },
                     { label: 'Peta Lokasi', route: '/dashboard/settings/location' },
+                    { label: 'Akses Mode Guru', route: '/dashboard/settings/akses-guru', adminOnly: true },
                 ]
             },
         ],
@@ -110,6 +113,7 @@ export default function Sidebar({ className, userRole = "EDITOR" }: SidebarProps
                 const filteredChildren = item.children.filter(child => {
                     // Restrict specific routes
                     if (child.route === '/dashboard/users') return userRole === 'ADMIN';
+                    if ((child as any).adminOnly) return userRole === 'ADMIN';
                     return true;
                 });
                 return { ...item, children: filteredChildren };
