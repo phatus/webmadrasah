@@ -26,7 +26,7 @@ export default async function StudentViolationDetailPage({
 
     if (!student) notFound()
 
-    const totalPoints = student.violations.reduce((sum, v) => sum + v.points, 0)
+    const totalPoints = student.violations.reduce((sum: number, v: { points: number }) => sum + v.points, 0)
 
     return (
         <StudentDetailClient

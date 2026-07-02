@@ -8,12 +8,11 @@ jobs:
   deploy:
     runs-on: self-hosted
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       NODE_OPTIONS: "--no-deprecation"
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Ensure Cache Folders Exist
         run: |
@@ -21,12 +20,12 @@ jobs:
           mkdir -p node_modules
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
 
       - name: Identify Changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |

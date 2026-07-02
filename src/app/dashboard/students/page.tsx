@@ -71,7 +71,7 @@ export default async function StudentsPage() {
                         <p className="text-sm mt-1">Tambahkan siswa menggunakan tombol di atas.</p>
                     </div>
                 ) : (
-                    students.map((student, key) => (
+                    students.map((student: { id: number; nis: string; name: string; class: string }, key: number) => (
                         <div
                             key={student.id}
                             className={`grid grid-cols-4 ${key === students.length - 1 ? "" : "border-b border-gray-100"}`}

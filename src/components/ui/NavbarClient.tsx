@@ -86,6 +86,10 @@ export default function NavbarClient({ siteName, logoUrl }: NavbarClientProps) {
                                         <Link href="/alumni" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">
                                             Direktori Alumni
                                         </Link>
+                                        <div className="my-1 border-t border-gray-100" />
+                                        <Link href="/pelanggaran" className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600">
+                                            📋 Catatan Pelanggaran
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -201,6 +205,9 @@ export default function NavbarClient({ siteName, logoUrl }: NavbarClientProps) {
                                     </Link>
                                     <Link href="/alumni" className="block text-sm text-gray-600 hover:text-emerald-600">
                                         Alumni
+                                    </Link>
+                                    <Link href="/pelanggaran" className="block text-sm text-red-600 hover:text-red-700 font-medium">
+                                        📋 Catatan Pelanggaran
                                     </Link>
                                 </div>
                             </div>

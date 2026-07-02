@@ -245,3 +245,28 @@ model AuditLog {
   @@index([createdAt])
   @@index([resource])
 }
+
+model Student {
+  id         Int                @id @default(autoincrement())
+  nis        String             @unique
+  name       String
+  class      String
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  violations StudentViolation[]
+}
+
+model StudentViolation {
+  id            Int      @id @default(autoincrement())
+  studentId     Int
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  violationDate DateTime @default(now())
+  description   String
+  penalty       String?
+  points        Int      @default(0)
+  reporterName  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([studentId])
+}

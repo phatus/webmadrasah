@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
+import type { Student, StudentViolation } from "@prisma/client"
 
 const StudentSchema = z.object({
     nis: z.string().min(1, "NIS wajib diisi"),
@@ -35,9 +36,9 @@ export async function getStudents(query?: string) {
             },
         })
 
-        return students.map((s) => ({
+        return students.map((s: Student & { violations: Pick<StudentViolation, 'points'>[] }) => ({
             ...s,
-            totalPoints: s.violations.reduce((sum, v) => sum + v.points, 0),
+            totalPoints: s.violations.reduce((sum: number, v: Pick<StudentViolation, 'points'>) => sum + v.points, 0),
         }))
     } catch (error) {
         console.error("Error fetching students:", error)
