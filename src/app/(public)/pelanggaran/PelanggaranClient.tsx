@@ -35,6 +35,42 @@ export default function PelanggaranClient({ students, teacherMode, searchQuery }
     const [isPending, startTransition] = useTransition()
     const [search, setSearch] = useState(searchQuery)
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [prevStudents, setPrevStudents] = useState(students)
+
+    // Reset page on students list change (search query changes)
+    if (students !== prevStudents) {
+        setPrevStudents(students)
+        setCurrentPage(1)
+    }
+
+    const totalPages = Math.ceil(students.length / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedStudents = students.slice(startIndex, endIndex)
+
+    const getPageNumbers = () => {
+        const pages = []
+        const range = 1
+        
+        for (let i = 1; i <= totalPages; i++) {
+            if (
+                i === 1 ||
+                i === totalPages ||
+                (i >= currentPage - range && i <= currentPage + range)
+            ) {
+                pages.push(i)
+            } else if (
+                pages[pages.length - 1] !== '...'
+            ) {
+                pages.push('...')
+            }
+        }
+        return pages
+    }
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault()
         const params = new URLSearchParams()
@@ -161,11 +197,35 @@ export default function PelanggaranClient({ students, teacherMode, searchQuery }
                     </button>
                 </form>
 
-                {searchQuery && (
-                    <p className="text-sm text-gray-500 mb-4">
-                        Menampilkan hasil untuk: <span className="font-medium text-gray-800">"{searchQuery}"</span> · {students.length} ditemukan
-                    </p>
-                )}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <div>
+                        {searchQuery ? (
+                            <p className="text-sm text-gray-500">
+                                Menampilkan hasil untuk: <span className="font-medium text-gray-800">"{searchQuery}"</span> · {students.length} ditemukan
+                            </p>
+                        ) : (
+                            <p className="text-sm text-gray-500">
+                                Menampilkan semua siswa · {students.length} ditemukan
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                        <span className="text-sm text-gray-500">Tampilkan:</span>
+                        <select
+                            value={itemsPerPage}
+                            onChange={e => {
+                                setItemsPerPage(Number(e.target.value))
+                                setCurrentPage(1)
+                            }}
+                            className="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                        >
+                            <option value={10}>10 siswa</option>
+                            <option value={20}>20 siswa</option>
+                            <option value={30}>30 siswa</option>
+                            <option value={50}>50 siswa</option>
+                        </select>
+                    </div>
+                </div>
 
                 {/* Teacher Mode Banner */}
                 {teacherMode && (
@@ -185,7 +245,7 @@ export default function PelanggaranClient({ students, teacherMode, searchQuery }
                         <div className="text-xs font-semibold uppercase text-gray-500 text-right">Aksi</div>
                     </div>
 
-                    {students.length === 0 ? (
+                    {paginatedStudents.length === 0 ? (
                         <div className="py-16 text-center text-gray-400">
                             <ShieldAlert className="mx-auto h-10 w-10 text-gray-300 mb-3" />
                             <p className="font-medium text-gray-500">Tidak ada siswa ditemukan</p>
@@ -194,12 +254,12 @@ export default function PelanggaranClient({ students, teacherMode, searchQuery }
                             )}
                         </div>
                     ) : (
-                        students.map((student, idx) => {
+                        paginatedStudents.map((student, idx) => {
                             const badge = getPointsBadge(student.totalPoints)
                             return (
                                 <div
                                     key={student.id}
-                                    className={`grid grid-cols-5 items-center px-4 py-3.5 hover:bg-gray-50 transition ${idx < students.length - 1 ? "border-b border-gray-100" : ""}`}
+                                    className={`grid grid-cols-5 items-center px-4 py-3.5 hover:bg-gray-50 transition ${idx < paginatedStudents.length - 1 ? "border-b border-gray-100" : ""}`}
                                 >
                                     <div className="text-sm font-mono text-gray-500">{student.nis}</div>
                                     <div className="col-span-2 flex items-center gap-3">
@@ -239,6 +299,61 @@ export default function PelanggaranClient({ students, teacherMode, searchQuery }
                                 </div>
                             )
                         })
+                    )}
+
+                    {/* Pagination Footer */}
+                    {totalPages > 1 && (
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 bg-gray-50 px-4 py-4">
+                            <div className="text-sm text-gray-500">
+                                Menampilkan <span className="font-medium text-gray-800">{startIndex + 1}</span> sampai{" "}
+                                <span className="font-medium text-gray-800">
+                                    {Math.min(endIndex, students.length)}
+                                </span>{" "}
+                                dari <span className="font-medium text-gray-800">{students.length}</span> siswa
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:pointer-events-none shadow-sm"
+                                >
+                                    Sebelumnya
+                                </button>
+                                
+                                {getPageNumbers().map((pageNum, idx) => {
+                                    if (pageNum === '...') {
+                                        return (
+                                            <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">
+                                                ...
+                                            </span>
+                                        )
+                                    }
+                                    
+                                    const isActive = pageNum === currentPage
+                                    return (
+                                        <button
+                                            key={`page-${pageNum}`}
+                                            onClick={() => setCurrentPage(Number(pageNum))}
+                                            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition shadow-sm ${
+                                                isActive
+                                                    ? "bg-red-600 text-white"
+                                                    : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                                            }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    )
+                                })}
+
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:pointer-events-none shadow-sm"
+                                >
+                                    Berikutnya
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </div>
 
