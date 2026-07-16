@@ -1,12 +1,12 @@
-# Panduan Deploy ke aaPanel dengan Supabase PostgreSQL
+# Panduan Deploy ke aaPanel dengan PostgreSQL (Lokal atau Supabase)
 
-Panduan ini berisi langkah-langkah untuk mendeploy aplikasi Next.js Web Madrasah ke aaPanel menggunakan Node.js Manager dengan Supabase sebagai database PostgreSQL.
+Panduan ini berisi langkah-langkah untuk mendeploy aplikasi Next.js Web Madrasah ke aaPanel menggunakan Node.js Manager dengan PostgreSQL sebagai databasenya (bisa berjalan secara lokal di server atau menggunakan layanan cloud Supabase).
 
 ## Prasyarat
 1. **aaPanel** terinstal di server.
 2. **Node.js Manager** (versi 2.0 atau terbaru) terinstal di aaPanel (install via App Store).
 3. **Git** terinstal di server.
-4. **Supabase project** sudah dibuat dan database sudah ready.
+4. **PostgreSQL** sudah siap (baik PostgreSQL lokal di aaPanel via PostgreSQL Manager, atau proyek Supabase).
 
 ## Langkah 1: Persiapan di aaPanel
 
@@ -26,20 +26,25 @@ cd webmadrasah
 
 ## Langkah 2.5: Konfigurasi .env (PENTING)
 
-**IMPORTANT**: Database akan menggunakan Supabase PostgreSQL, bukan SQLite.
+**IMPORTANT**: Database akan menggunakan PostgreSQL (Lokal VPS atau Supabase), bukan SQLite.
 
 Buat file `.env` di dalam folder `webmadrasah`:
 
 1. Buka File Manager aaPanel.
 2. Masuk ke `/www/wwwroot/webmadrasah`.
 3. Buat file baru bernama `.env`.
-4. Isi dengan konten berikut (ganti dengan Supabase connection strings Anda):
+4. Isi dengan konten berikut:
 
 ```env
-# Supabase PostgreSQL Connection Strings
-# Get from Supabase Dashboard → Your Project → Settings → Database → Connection String
-DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
+# Database Settings (Pilih salah satu opsi di bawah)
+
+# OPSI A: PostgreSQL Lokal Server (Direkomendasikan)
+DATABASE_URL="postgresql://madrasah_user:password_anda@localhost:5432/webmadrasah?schema=public"
+DIRECT_URL="postgresql://madrasah_user:password_anda@localhost:5432/webmadrasah?schema=public"
+
+# OPSI B: Supabase PostgreSQL (Cloud)
+# DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+# DIRECT_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
 
 # Generate this! Run in terminal (64-char random hex):
 # node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -51,32 +56,21 @@ CLOUDINARY_API_KEY="your-cloudinary-api-key"
 CLOUDINARY_API_SECRET="your-cloudinary-api-secret"
 ```
 
-### Catatan penting tentang Supabase:
-- `DATABASE_URL`: Connection string dengan connection pool (port 6543, `?pgbouncer=true`)
-- `DIRECT_URL`: Direct connection tanpa pooling (port 5432) - **diperlukan untuk migrations**
-- Ganti `[PROJECT-REF]` dengan reference ID project Supabase Anda (e.g., `pwkjffuaeughbzqvpala`)
-- Ganti `[PASSWORD]` dengan password database Supabase Anda
-- Anda bisa menemukan kedua connection string ini di Supabase Dashboard → Settings → Database → Connection String → "Connection pooling" dan "Direct connection"
+### Catatan penting tentang Database:
+- Untuk **PostgreSQL Lokal** (Opsi A), pastikan PostgreSQL sudah diinstal di aaPanel (melalui App Store -> PostgreSQL Manager) dan database `webmadrasah` beserta user `madrasah_user` sudah dibuat.
+- Untuk **Supabase** (Opsi B), `DATABASE_URL` menggunakan port 6543 dengan `?pgbouncer=true` dan `DIRECT_URL` menggunakan port 5432.
+- Jika menggunakan Supabase, pastikan IP server aaPanel Anda sudah dimasukkan ke whitelist (IP Allow List) di Supabase Dashboard (Settings -> Database -> Network).
 
-## Langkah 3: Whitelist Server IP di Supabase (CRITICAL!)
+## Langkah 3: Migrasi Data jika berpindah dari Supabase (Opsional)
 
-**Sebelum melanjutkan, Anda harus whitelist server IP di Supabase:**
+Jika sebelumnya Anda menggunakan database Supabase dan ingin memindahkan data ke database PostgreSQL lokal server:
 
-1. Dapatkan IP address server aaPanel Anda:
+1. Jalankan skrip bantu migrasi interaktif di server:
    ```bash
-   curl ifconfig.me
+   bash scripts/db-transfer.sh
    ```
-   Atau cek di aaPanel → Network → IP Address.
-
-2. Buka [Supabase Dashboard](https://supabase.com) → Your Project → **Settings** → **Database** → **Network**
-
-3. Di bagian **IP Allow List**, tambahkan IP server Anda:
-   - Untuk production: tambahkan IP server spesifik (recommended)
-   - Untuk testing: Anda bisa tambahkan `0.0.0.0/0` (allow all) tapi **kurangi setelah production**
-
-4. Klik **Save** atau **Add IP Address**.
-
-**Jika tidak melakukan ini, koneksi database akan gagal dan app tidak bisa start.**
+2. Ikuti instruksi pada layar untuk memasukkan URL koneksi Supabase Anda dan URL koneksi lokal. Skrip akan mengekspor skema `public` dari Supabase dan memulihkannya ke server PostgreSQL lokal secara otomatis.
+3. Selengkapnya lihat panduan di [MIGRATE_TO_LOCAL_DB.md](file:///home/agusw/appdev/webmadrasah/MIGRATE_TO_LOCAL_DB.md).
 
 ## Langkah 4: Install & Build
 
@@ -214,9 +208,9 @@ curl -I https://mtsn1pacitan.sch.id/berita       # Should return 200
 
 ### Database connection fails
 - **Check**: `.env` memiliki `DATABASE_URL` dan `DIRECT_URL` yang benar
-- **Check**: Server IP sudah di-whitelist di Supabase (Settings → Database → Network)
-- **Check**: Format connection string sesuai provider Supabase (biasanya `aws-0-ap-south-1.pooler.supabase.com`)
-- Test dengan: `npx prisma db pull` – jika berhasil, koneksi OK
+- **PostgreSQL Lokal**: Pastikan service PostgreSQL berjalan di server (atau cek status di aaPanel -> PostgreSQL Manager). Pastikan user, password, dan nama database sudah sesuai.
+- **Supabase**: Pastikan server IP sudah di-whitelist di Supabase (Settings → Database → Network). Cek format connection string.
+- Test dengan: `npx prisma db pull` atau `npx prisma migrate status` – jika berhasil, koneksi OK
 
 ### 502 Bad Gateway after deploy
 - **Check**: Node.js project running di aaPanel (status "Running")
@@ -255,7 +249,7 @@ Jika halaman utama (`/`) bisa dibuka tapi halaman lain (`/profil`, `/berita`, dl
 
 ## Important Notes
 
-✅ **Database**: Gunakan Supabase PostgreSQL untuk production. SQLite **tidak** disarankan untuk production server.
+✅ **Database**: Gunakan PostgreSQL (lokal server atau cloud Supabase) untuk production. SQLite **tidak** disarankan untuk production server.
 
 ✅ **Migrations**: Selalu jalankan `npx prisma migrate deploy` setelah `git pull` jika ada schema changes.
 
@@ -266,7 +260,7 @@ Jika halaman utama (`/`) bisa dibuka tapi halaman lain (`/profil`, `/berita`, dl
 - Gunakan strong `AUTH_SECRET` (64+ chars random)
 - Enable HTTPS dengan Let's Encrypt (sudah di步骤 6)
 
-✅ **Backup**: Gunakan Supabase automatic backups atau setup manual backup via Supabase Dashboard.
+✅ **Backup**: Jika menggunakan PostgreSQL lokal server, Anda dapat mengatur backup berkala via cron job atau menu backup database di aaPanel. Jika menggunakan Supabase, gunakan Supabase automatic backups.
 
 ## Performance Tips
 
@@ -281,8 +275,8 @@ Jika halaman utama (`/`) bisa dibuka tapi halaman lain (`/profil`, `/berita`, dl
 ## Emergency Procedures
 
 ### Database connection lost:
-1. Check Supabase status: [status.supabase.com](https://status.supabase.com)
-2. Verify server IP masih di-whitelist
+1. Check database server status: Cek status service PostgreSQL di aaPanel atau cek [status.supabase.com](https://status.supabase.com) jika menggunakan Supabase.
+2. Verify connectivity: Pastikan user dan database aktif serta dapat diakses.
 3. Restart Node.js project di aaPanel
 
 ### Need to reset database:
