@@ -17,7 +17,11 @@ export const authConfig = {
             } else if (isLoggedIn) {
                 // If logged in and on login page, redirect to dashboard
                 if (nextUrl.pathname === '/login') {
-                    return Response.redirect(new URL('/dashboard', nextUrl));
+                    const redirectUrl = new URL('/dashboard', nextUrl);
+                    if (process.env.NODE_ENV === 'production' || nextUrl.headers.get('x-forwarded-proto') === 'https') {
+                        redirectUrl.protocol = 'https:';
+                    }
+                    return Response.redirect(redirectUrl);
                 }
             }
             return true;
