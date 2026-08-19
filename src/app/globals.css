@@ -43,3 +43,22 @@
 .marquee-container:hover .animate-marquee {
   animation-play-state: paused;
 }
+
+/* Tiptap Rich Text Editor Enhancements */
+.ProseMirror {
+  min-height: 350px;
+  outline: none !important;
+}
+
+.ProseMirror:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #94a3b8;
+  content: "Tuliskan isi artikel / berita lengkap di sini...";
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

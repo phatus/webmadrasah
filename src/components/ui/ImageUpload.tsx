@@ -2,15 +2,15 @@
 
 import { CldUploadWidget } from 'next-cloudinary'
 import Image from 'next/image'
-import { ImagePlus, Trash, AlertCircle } from 'lucide-react'
+import { ImagePlus, Trash, AlertCircle, Link as LinkIcon, Check } from 'lucide-react'
 import { useState } from 'react'
 
 interface ImageUploadProps {
     value: string
     onChange: (value: string) => void
     onRemove: (value: string) => void
-    maxSizeInMB?: number // default 5MB
-    allowedFormats?: string[] // default ['jpg', 'jpeg', 'png', 'webp']
+    maxSizeInMB?: number
+    allowedFormats?: string[]
 }
 
 export default function ImageUpload({
@@ -21,39 +21,7 @@ export default function ImageUpload({
     allowedFormats = ['jpg', 'jpeg', 'png', 'webp']
 }: ImageUploadProps) {
     const [error, setError] = useState<string | null>(null)
-
-    const validateFile = (file: File): boolean => {
-        setError(null)
-
-        // Check file size
-        const maxSize = maxSizeInMB * 1024 * 1024
-        if (file.size > maxSize) {
-            setError(`File terlalu besar. Maksimal ${maxSizeInMB}MB`)
-            return false
-        }
-
-        // Check file type
-        const fileExt = file.name.split('.').pop()?.toLowerCase()
-        const mimeType = file.type
-
-        const allowedExtensions = allowedFormats
-        const allowedMimeTypes = allowedFormats.map(ext => {
-            switch(ext) {
-                case 'jpg': case 'jpeg': return 'image/jpeg'
-                case 'png': return 'image/png'
-                case 'webp': return 'image/webp'
-                case 'gif': return 'image/gif'
-                default: return `image/${ext}`
-            }
-        })
-
-        if (!allowedExtensions.includes(fileExt || '') && !allowedMimeTypes.includes(mimeType)) {
-            setError(`Format file tidak didukung. Gunakan: ${allowedFormats.join(', ')}`)
-            return false
-        }
-
-        return true
-    }
+    const [urlInput, setUrlInput] = useState('')
 
     const onUpload = (result: any) => {
         if (result.event !== 'success') {
@@ -61,73 +29,96 @@ export default function ImageUpload({
             return
         }
         setError(null)
-        onChange(result.info.secure_url)
+        if (result.info?.secure_url) {
+            onChange(result.info.secure_url)
+        }
+    }
+
+    const handleApplyUrl = () => {
+        if (!urlInput.trim()) return
+        setError(null)
+        onChange(urlInput.trim())
+        setUrlInput('')
     }
 
     return (
-        <div>
-            <div className="mb-4 flex items-center gap-4">
-                {value && (
-                    <div className="relative w-[200px] h-[200px] rounded-md overflow-hidden">
-                        <div className="z-10 absolute top-2 right-2">
-                            <button
-                                type="button"
-                                onClick={() => onRemove(value)}
-                                className="bg-red-500 hover:bg-red-600 text-white p-1 rounded-full"
-                            >
-                                <Trash className="w-4 h-4" />
-                            </button>
-                        </div>
-                        <Image
-                            fill
-                            className="object-cover"
-                            alt="Image"
-                            src={value}
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
+        <div className="space-y-3">
+            {/* Image Preview Box */}
+            {value && (
+                <div className="relative w-40 h-40 rounded-xl overflow-hidden border border-slate-300 shadow-sm bg-slate-100 group">
+                    <Image
+                        fill
+                        className="object-cover"
+                        alt="Preview"
+                        src={value}
+                        sizes="160px"
+                    />
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                            type="button"
+                            onClick={() => onRemove(value)}
+                            className="bg-rose-600 hover:bg-rose-700 text-white p-2 rounded-full shadow-lg transition-transform hover:scale-110"
+                            title="Hapus Foto"
+                        >
+                            <Trash className="w-4 h-4" />
+                        </button>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
+
             {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start gap-2 text-sm">
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg flex items-start gap-2 text-xs font-medium">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                     <span>{error}</span>
                 </div>
             )}
 
-            <CldUploadWidget
-                uploadPreset="webmadrasah_preset"
-                onSuccess={onUpload}
-                options={{
-                    maxFiles: 1,
-                    sources: ['local', 'url', 'camera'],
-                    multiple: false,
-                    cropping: true,
-                    croppingAspectRatio: 1, // Force square crop for teachers/profiles
-                    showSkipCropButton: false,
-                    croppingShowDimensions: true,
-                    croppingValidateDimensions: true,
-                }}
-            >
-                {({ open }) => {
-                    const onClick = () => {
-                        setError(null)
-                        open()
-                    }
-
-                    return (
+            {/* Action Buttons & Manual URL */}
+            <div className="flex flex-col sm:flex-row gap-2">
+                <CldUploadWidget
+                    uploadPreset="webmadrasah_preset"
+                    onSuccess={onUpload}
+                    options={{
+                        maxFiles: 1,
+                        sources: ['local', 'url', 'camera'],
+                        multiple: false,
+                    }}
+                >
+                    {({ open }) => (
                         <button
                             type="button"
-                            disabled={!!value}
-                            onClick={onClick}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md flex items-center gap-2 border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            onClick={() => {
+                                setError(null)
+                                open()
+                            }}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-xs cursor-pointer shrink-0"
                         >
                             <ImagePlus className="w-4 h-4" />
-                            {value ? 'Ganti Gambar' : 'Upload Image'}
+                            {value ? 'Ganti Foto' : 'Unggah Foto (Cloud)'}
                         </button>
-                    )
-                }}
-            </CldUploadWidget>
+                    )}
+                </CldUploadWidget>
+
+                <div className="flex flex-1 gap-2">
+                    <div className="relative flex-1">
+                        <LinkIcon className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="url"
+                            value={urlInput}
+                            onChange={(e) => setUrlInput(e.target.value)}
+                            placeholder="Atau tempelkan link / URL foto (https://...)"
+                            className="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-slate-300 bg-white outline-none focus:border-emerald-600 font-medium"
+                        />
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleApplyUrl}
+                        className="px-3.5 py-2 rounded-lg bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 transition shrink-0"
+                    >
+                        Pakai URL
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }

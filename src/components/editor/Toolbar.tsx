@@ -30,7 +30,7 @@ export function Toolbar({ editor }: Props) {
     }
 
     return (
-        <div className="border border-input bg-transparent rounded-t-md p-2 flex flex-wrap gap-2 border-b-0">
+        <div className="bg-slate-50/90 border-b border-slate-200 p-2.5 flex flex-wrap gap-1.5 items-center">
 
             <button
                 type="button"

@@ -24,7 +24,7 @@ export default async function Home() {
     const [heroData, cardsData, { posts }, programs, agendas, videos] = await Promise.all([
         getHomeData("home_hero"),
         getHomeData("home_cards"),
-        getCachedPosts(1, 3),
+        getCachedPosts(1, 4),
         getPrograms(),
         getAgendas(4),
         getVideos(3)
@@ -65,6 +65,9 @@ export default async function Home() {
 
             {/* Featured Programs Section */}
             <FeaturedPrograms programs={programs} />
+
+            {/* News Section */}
+            <HomeNewsSection posts={posts} />
 
             {/* Agenda Section */}
             <HomeAgendaSection agendas={agendas} />
@@ -110,9 +113,6 @@ export default async function Home() {
                     </div>
                 </div>
             </section>
-
-            {/* News Section */}
-            <HomeNewsSection posts={posts} />
         </main>
     )
 }

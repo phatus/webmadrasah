@@ -44,7 +44,7 @@ export default function TeacherList({ initialTeachers }: { initialTeachers: Teac
                 {filteredTeachers.map((teacher) => (
                     <div key={teacher.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
                         {/* Image Container */}
-                        <div className="aspect-[4/5] bg-gray-200 relative overflow-hidden">
+                        <div className="aspect-[4/5] bg-slate-100 relative overflow-hidden">
                             {teacher.image ? (
                                 <Image
                                     src={teacher.image}
@@ -53,9 +53,9 @@ export default function TeacherList({ initialTeachers }: { initialTeachers: Teac
                                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
                             ) : (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-100">
-                                    <User className="h-24 w-24 mb-2 opacity-50" />
-                                    <span className="text-xs font-medium">No Photo</span>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-gradient-to-b from-slate-100 to-slate-200">
+                                    <User className="h-20 w-20 mb-2 text-slate-400 opacity-60" />
+                                    <span className="text-xs font-semibold text-slate-500">Foto GTK</span>
                                 </div>
                             )}
                             {/* Overlay Gradient */}

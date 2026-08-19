@@ -41,7 +41,7 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
         editorProps: {
             attributes: {
                 className:
-                    'min-h-[300px] w-full outline-none prose prose-sm max-w-none',
+                    'min-h-[350px] sm:min-h-[400px] w-full outline-none focus:outline-none prose prose-slate max-w-none text-slate-800 text-base leading-relaxed',
             },
         },
         onUpdate({ editor }) {
@@ -50,9 +50,12 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
     })
 
     return (
-        <div className="rounded border-[1.5px] border-stroke bg-transparent font-medium outline-none transition-colors focus-within:border-emerald-600 active:border-emerald-600">
+        <div className="rounded-xl border border-slate-300 bg-white font-medium outline-none transition-all shadow-sm focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 overflow-hidden">
             <Toolbar editor={editor} />
-            <div className="border-t border-stroke p-3">
+            <div 
+                className="p-4 sm:p-5 min-h-[380px] sm:min-h-[440px] cursor-text bg-white"
+                onClick={() => editor?.commands.focus()}
+            >
                 <EditorContent editor={editor} />
             </div>
         </div>

@@ -1,11 +1,13 @@
 
 import { getSettings } from "@/actions/settings"
 import { Facebook, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react"
+import Image from "next/image"
 
 export default async function Footer() {
     const settings = await getSettings()
 
     const siteName = settings['site_name'] || "MTsN 1 Pacitan"
+    const logoUrl = settings['site_logo'] || "/images/logo.png"
     const description = settings['site_description'] || "Membentuk generasi berprestasi, berakhlak mulia, dan berwawasan lingkungan."
     const address = settings['contact_address'] || "R34X+6XQ, Jl. H. Samanhudi, Palihan, Pucangsewu, Kec. Pacitan, Kabupaten Pacitan, Jawa Timur 63511"
     const phone = settings['contact_phone'] || "(0357) 881303"
@@ -20,7 +22,14 @@ export default async function Footer() {
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
                     <div>
-                        <h3 className="text-2xl font-bold text-emerald-500">{siteName}</h3>
+                        <div className="flex items-center gap-3 mb-2">
+                            {logoUrl && (
+                                <div className="relative w-10 h-10 shrink-0">
+                                    <Image src={logoUrl} alt="Logo" fill className="object-contain" />
+                                </div>
+                            )}
+                            <h3 className="text-2xl font-bold text-emerald-500">{siteName}</h3>
+                        </div>
                         <p className="mt-4 text-gray-400">
                             {description}
                         </p>

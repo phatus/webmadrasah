@@ -7,7 +7,8 @@ export const authConfig = {
         signIn: '/login',
     },
     callbacks: {
-        authorized({ auth, request: { nextUrl } }) {
+        authorized({ auth, request }) {
+            const nextUrl = request.nextUrl;
             const isLoggedIn = !!auth?.user;
             const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
 
@@ -18,7 +19,7 @@ export const authConfig = {
                 // If logged in and on login page, redirect to dashboard
                 if (nextUrl.pathname === '/login') {
                     const redirectUrl = new URL('/dashboard', nextUrl);
-                    if (process.env.NODE_ENV === 'production' || nextUrl.headers.get('x-forwarded-proto') === 'https') {
+                    if (process.env.NODE_ENV === 'production' || request.headers?.get('x-forwarded-proto') === 'https') {
                         redirectUrl.protocol = 'https:';
                     }
                     return Response.redirect(redirectUrl);

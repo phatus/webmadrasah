@@ -2,96 +2,162 @@
 
 import { useFormState } from "react-dom"
 import { updateSettings } from "@/actions/settings"
-import { Save, MapPin, Info } from "lucide-react"
+import { Save, MapPin, CheckCircle, RotateCcw, HelpCircle, AlertTriangle } from "lucide-react"
+import { useState } from "react"
 
 interface LocationSettingsFormProps {
     settings: Record<string, string>
 }
 
-export default function LocationSettingsForm({ settings }: LocationSettingsFormProps) {
-    const [state, formAction] = useFormState(updateSettings, null as any)
-    const currentMap = settings['map_embed'] || ""
+const DEFAULT_MAP_URL = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.465492415175!2d111.08868971077755!3d-8.198308782046467!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7961bd40e66f8d%3A0xc682da26850c905b!2sMTs%20Negeri%20Pacitan!5e0!3m2!1sen!2sid!4v1705646199464!5m2!1sen!2sid"
 
-    // Simple helper to extract src from iframe if user pastes the whole thing
-    const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-        const pasteData = e.clipboardData.getData('text')
-        if (pasteData.includes('<iframe')) {
-            const srcMatch = pasteData.match(/src=["'](.+?)["']/)
-            if (srcMatch && srcMatch[1]) {
-                // We'll let the user see what they pasted or we can auto-transform
-                // For now, let's just let them paste and we'll handle it or they can manually fix
+export default function LocationSettingsForm({ settings }: LocationSettingsFormProps) {
+    // @ts-ignore
+    const [state, formAction] = useFormState(updateSettings, null as any)
+    const initialMap = settings['map_embed'] || DEFAULT_MAP_URL
+    const [mapInput, setMapInput] = useState(initialMap)
+
+    const extractSrcUrl = (text: string): string => {
+        if (!text) return ""
+        const trimmed = text.trim()
+        if (trimmed.includes('<iframe')) {
+            const match = trimmed.match(/src=["'](.+?)["']/)
+            if (match && match[1]) {
+                return match[1]
             }
         }
+        return trimmed
+    }
+
+    const cleanedMapUrl = extractSrcUrl(mapInput)
+    const isNonEmbedUrl = cleanedMapUrl.includes('google.com/maps/place') || cleanedMapUrl.includes('maps.app.goo.gl')
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const val = e.target.value
+        setMapInput(extractSrcUrl(val))
+    }
+
+    const resetToDefault = () => {
+        setMapInput(DEFAULT_MAP_URL)
     }
 
     return (
         <form action={formAction} className="space-y-6">
             {state?.success && (
-                <div className="rounded-xl bg-emerald-50 p-4 text-emerald-700 border border-emerald-100 font-medium animate-in fade-in slide-in-from-top-4">
-                    {state.message}
+                <div className="rounded-xl bg-emerald-50 p-4 text-emerald-800 border border-emerald-200 font-medium flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>Pengaturan peta lokasi berhasil disimpan.</span>
                 </div>
             )}
             {state?.error && (
-                <div className="rounded-xl bg-red-50 p-4 text-red-700 border border-red-100 font-medium animate-in shake">
+                <div className="rounded-xl bg-rose-50 p-4 text-rose-700 border border-rose-200 font-medium">
                     {state.error}
                 </div>
             )}
 
-            <div className="rounded-2xl border border-stroke bg-white shadow-default overflow-hidden">
-                <div className="border-b border-stroke py-4 px-6.5 bg-gray-50 flex items-center gap-3">
-                    <MapPin className="text-emerald-600" size={20} />
-                    <h3 className="font-bold text-black uppercase tracking-tight">Konfigurasi Peta Lokasi</h3>
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div className="border-b border-slate-200 py-4 px-6 bg-slate-50/50 flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <MapPin className="text-emerald-600" size={20} />
+                        <h3 className="font-bold text-slate-800 text-lg">Konfigurasi Peta Lokasi (Google Maps)</h3>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={resetToDefault}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        Reset ke Lokasi MTsN 1 Pacitan
+                    </button>
                 </div>
 
-                <div className="p-8">
-                    <div className="mb-6">
-                        <label className="mb-3 block text-sm font-bold text-black uppercase tracking-wider">
-                            URL Embed Google Maps
+                <div className="p-6.5 space-y-6">
+                    <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-700">
+                            URL / Kode Embed Google Maps <span className="text-rose-500">*</span>
                         </label>
                         <textarea
                             name="map_embed"
-                            defaultValue={currentMap}
-                            rows={4}
-                            onPaste={handlePaste}
-                            placeholder="Tempel URL atau kode iframe Google Maps di sini..."
-                            className="w-full rounded-xl border-2 border-stroke bg-transparent py-4 px-5 font-medium outline-none transition focus:border-emerald-600 active:border-emerald-600 placeholder:text-gray-400"
+                            value={mapInput}
+                            onChange={handleChange}
+                            rows={3}
+                            placeholder="Tempelkan URL embed (https://www.google.com/maps/embed?...) atau seluruh kode <iframe> di sini..."
+                            className="w-full rounded-xl border border-slate-300 bg-white p-4 font-mono text-xs text-slate-800 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
                         ></textarea>
 
-                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 flex gap-3 text-blue-800 text-sm italic">
-                            <div className="mt-0.5">💡</div>
-                            <p>
-                                <strong>Tips:</strong> Buka Google Maps, cari lokasi sekolah, klik <strong>Bagikan</strong> &raquo; <strong>Sematkan Peta</strong>, lalu salin URL yang ada di dalam atribut <code>src="..."</code> atau tempel seluruh kode iframe ke sini.
-                            </p>
+                        {isNonEmbedUrl && (
+                            <div className="mt-3 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-3">
+                                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-bold text-slate-900">Perhatian: Link Berbagi Biasa Terdeteksi!</p>
+                                    <p className="mt-1 leading-relaxed">
+                                        URL yang dimasukkan (<code>{cleanedMapUrl.slice(0, 45)}...</code>) adalah link lokasi biasa. Google memblokir link lokasi biasa jika dipasang di dalam frame (Content Blocked). Harap gunakan tombol <strong>"Sematkan Peta (Embed a map)"</strong> dari Google Maps atau klik tombol <strong>"Reset ke Lokasi MTsN 1 Pacitan"</strong> di atas.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-2">
+                            <div className="flex items-center gap-2 font-bold text-slate-800">
+                                <HelpCircle className="w-4 h-4 text-emerald-600" />
+                                <span>Cara Mendapatkan Kode Embed Google Maps yang Benar:</span>
+                            </div>
+                            <ol className="list-decimal list-inside space-y-1 pl-1 text-slate-600 leading-relaxed">
+                                <li>Buka <strong>Google Maps</strong> di browser dan cari lokasi sekolah Anda.</li>
+                                <li>Klik tombol <strong>Bagikan (Share)</strong> &raquo; pilih tab <strong>Sematkan Peta (Embed a map)</strong>.</li>
+                                <li>Klik <strong>Salin HTML (Copy HTML)</strong> lalu tempelkan di atas. Sistem akan otomatis mengekstrak URL embed resmi.</li>
+                            </ol>
                         </div>
                     </div>
 
-                    {currentMap && (
-                        <div>
-                            <label className="mb-3 block text-sm font-bold text-black uppercase tracking-wider">
-                                Preview Peta
-                            </label>
-                            <div className="rounded-2xl overflow-hidden border-2 border-emerald-100 shadow-inner h-[400px] w-full bg-gray-100 flex items-center justify-center">
+                    {/* Live Preview */}
+                    <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-700">
+                            Pratinjau Peta Lokasi Website
+                        </label>
+                        <div className="rounded-xl overflow-hidden border border-slate-300 shadow-inner h-[380px] w-full bg-slate-100 relative">
+                            {cleanedMapUrl && !isNonEmbedUrl ? (
                                 <iframe
-                                    src={currentMap.includes('<iframe') ? (currentMap.match(/src=["'](.+?)["']/)?.[1] || "") : currentMap}
+                                    src={cleanedMapUrl}
                                     width="100%"
                                     height="100%"
                                     style={{ border: 0 }}
                                     allowFullScreen
                                     loading="lazy"
+                                    referrerPolicy="no-referrer-when-downgrade"
                                 ></iframe>
-                            </div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center p-6 text-center text-slate-500 bg-slate-50">
+                                    <AlertTriangle className="w-8 h-8 text-amber-500 mb-2" />
+                                    <p className="font-bold text-slate-800 text-sm">Peta Tidak Dapat Ditampilkan</p>
+                                    <p className="text-xs text-slate-500 max-w-md mt-1">
+                                        {isNonEmbedUrl
+                                            ? "Link yang dimasukkan bukan URL embed valid. Klik tombol 'Reset ke Lokasi MTsN 1 Pacitan' di kanan atas untuk menggunakan peta resmi sekolah."
+                                            : "Silakan tempelkan URL Google Maps Embed yang valid di atas."}
+                                    </p>
+                                    {isNonEmbedUrl && (
+                                        <button
+                                            type="button"
+                                            onClick={resetToDefault}
+                                            className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs hover:bg-emerald-700 transition"
+                                        >
+                                            Gunakan Peta Resmi MTsN 1 Pacitan
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
 
             <div className="flex justify-end">
                 <button
                     type="submit"
-                    className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-10 py-4 font-black text-white transition-all shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:shadow-xl active:scale-95"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-8 py-3.5 font-bold text-white transition-all shadow-md hover:bg-emerald-700 hover:shadow-lg active:scale-98"
                 >
-                    <Save size={20} />
-                    SIMPAN LOKASI
+                    <Save size={18} />
+                    Simpan Pengaturan Peta Lokasi
                 </button>
             </div>
         </form>

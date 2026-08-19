@@ -30,10 +30,10 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://*.cloudinary.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://mtsn1pacitan.sch.id",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://mtsn1pacitan.sch.id https://*.google.com https://*.googleapis.com https://*.gstatic.com",
   "media-src 'self' https://res.cloudinary.com",
-  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.cloudinary.com",
-  "connect-src 'self' https://*.cloudinary.com",
+  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.cloudinary.com https://www.google.com https://*.google.com https://*.google.co.id",
+  "connect-src 'self' https://*.cloudinary.com https://*.google.com https://*.googleapis.com",
   "base-uri 'self'",
   "form-action 'self'"
 ].join('; ')
