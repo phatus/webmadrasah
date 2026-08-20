@@ -15,9 +15,6 @@
   --color-whiter: #F5F7FD;
 }
 
-
-
-
 @layer base {
   body {
     background: var(--background);
@@ -44,7 +41,7 @@
   animation-play-state: paused;
 }
 
-/* Tiptap Rich Text Editor Enhancements */
+/* Tiptap Rich Text Editor Enhancements & Article Typography */
 .ProseMirror {
   min-height: 350px;
   outline: none !important;
@@ -55,10 +52,117 @@
   box-shadow: none !important;
 }
 
+/* Paragraph spacing inside Editor & Public Prose views */
+.ProseMirror p,
+.prose p,
+.prose > p,
+.prose-content p {
+  margin-top: 0 !important;
+  margin-bottom: 1.5rem !important;
+  line-height: 1.8 !important;
+}
+
+.ProseMirror p:last-child,
+.prose p:last-child,
+.prose > p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Headings spacing */
+.ProseMirror h1, .prose h1,
+.ProseMirror h2, .prose h2,
+.ProseMirror h3, .prose h3 {
+  margin-top: 1.75em !important;
+  margin-bottom: 0.85em !important;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ProseMirror ul, .prose ul,
+.ProseMirror ol, .prose ol {
+  margin-top: 1.25em !important;
+  margin-bottom: 1.25em !important;
+  padding-left: 1.5em !important;
+}
+
+.ProseMirror blockquote, .prose blockquote {
+  margin-top: 1.5em !important;
+  margin-bottom: 1.5em !important;
+  padding-left: 1rem !important;
+  border-left: 4px solid #10b981 !important;
+  font-style: italic;
+  color: #475569;
+}
+
 .ProseMirror p.is-editor-empty:first-child::before {
   color: #94a3b8;
   content: "Tuliskan isi artikel / berita lengkap di sini...";
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+/* CKEditor 5 Custom Styling & Explicit Paragraph Spacing */
+.ck-editor__editable_inline,
+.ck-content,
+.ck.ck-content {
+  min-height: 350px !important;
+  font-size: 1rem !important;
+  line-height: 1.8 !important;
+  color: #1e293b !important;
+  border-bottom-left-radius: 0.75rem !important;
+  border-bottom-right-radius: 0.75rem !important;
+  padding: 1.25rem !important;
+}
+
+.ck-content p,
+.ck-editor__editable p,
+.ck-editor__editable_inline p,
+.ck-editor-wrapper p {
+  margin-top: 0 !important;
+  margin-bottom: 1.5rem !important;
+  line-height: 1.8 !important;
+}
+
+.ck-content p:last-child,
+.ck-editor__editable p:last-child,
+.ck-editor__editable_inline p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.ck-toolbar {
+  border-top-left-radius: 0.75rem !important;
+  border-top-right-radius: 0.75rem !important;
+  border-color: #cbd5e1 !important;
+  background-color: #f8fafc !important;
+}
+
+.ck-focused {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Fallback spacing for <br> break tags inside articles & editor */
+.prose br,
+.ck-content br,
+.ck-editor__editable br {
+  content: "";
+  display: block;
+  margin-top: 1rem !important;
+}
+
+/* Gutenberg Block Editor (BlockNote) Custom Styling */
+.bn-container {
+  font-family: inherit !important;
+}
+
+.bn-block-content p {
+  margin-top: 0 !important;
+  margin-bottom: 1.25rem !important;
+  line-height: 1.8 !important;
+}
+
+.gutenberg-block-editor .bn-editor {
+  padding: 0.5rem 0 !important;
+  min-height: 350px !important;
 }

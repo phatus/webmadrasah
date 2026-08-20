@@ -95,7 +95,36 @@ export default async function NewsDetailPage({ params }: Props) {
 
                         {/* Content */}
                         <div className="prose prose-lg prose-emerald max-w-none prose-img:rounded-xl">
-                            {parse(DOMPurify.sanitize(post.content))}
+                            {parse(DOMPurify.sanitize(
+                                (() => {
+                                    if (!post.content) return ''
+                                    
+                                    let html = post.content
+                                    
+                                    // If raw plain text without HTML tags
+                                    if (!html.includes('<')) {
+                                        return html
+                                            .split(/\n+/)
+                                            .filter(line => line.trim().length > 0)
+                                            .map(line => `<p>${line.trim()}</p>`)
+                                            .join('')
+                                    }
+
+                                    // Replace break tags (<br>, <br/>, <br />) with paragraph separators
+                                    html = html.replace(/(<br\s*\/?>\s*)+/gi, '</p><p>')
+
+                                    // If not wrapped in <p>, wrap in <p>
+                                    if (!html.trim().startsWith('<p>')) {
+                                        html = `<p>${html}`
+                                    }
+                                    if (!html.trim().endsWith('</p>')) {
+                                        html = `${html}</p>`
+                                    }
+
+                                    // Clean up empty <p></p> or <p> </p>
+                                    return html.replace(/<p>\s*<\/p>/gi, '')
+                                })()
+                            ))}
                         </div>
 
                         {/* Share Buttons */}
