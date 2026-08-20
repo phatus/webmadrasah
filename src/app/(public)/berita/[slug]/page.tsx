@@ -105,8 +105,8 @@ export default async function NewsDetailPage({ params }: Props) {
                                     if (!html.includes('<')) {
                                         return html
                                             .split(/\n+/)
-                                            .filter(line => line.trim().length > 0)
-                                            .map(line => `<p>${line.trim()}</p>`)
+                                            .filter((line: string) => line.trim().length > 0)
+                                            .map((line: string) => `<p>${line.trim()}</p>`)
                                             .join('')
                                     }
 
