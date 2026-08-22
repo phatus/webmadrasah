@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState, useTransition } from "react"
-import { createAcademicYear, setActiveAcademicYear, deleteAcademicYear } from "@/actions/academic-year"
+import { createAcademicYear, setActiveAcademicYear, deleteAcademicYear, type CreateAcademicYearState } from "@/actions/academic-year"
 import Link from "next/link"
 import { ArrowLeft, CalendarDays, Plus, CheckCircle2, Trash2, Star } from "lucide-react"
 
@@ -15,7 +15,7 @@ type AcademicYear = {
     _count: { classHistory: number }
 }
 
-const initialState = { error: '', fieldErrors: {} as Record<string, string[]>, success: false, message: '' }
+const initialState: CreateAcademicYearState = { error: '', fieldErrors: {}, success: false, message: '' }
 
 export default function AcademicYearsClient({ years }: { years: AcademicYear[] }) {
     const [state, formAction, isPending] = useActionState(createAcademicYear, initialState)

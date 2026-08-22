@@ -36,7 +36,14 @@ export async function getActiveAcademicYear() {
     }
 }
 
-export async function createAcademicYear(prevState: unknown, formData: FormData) {
+export type CreateAcademicYearState = {
+    error?: string
+    fieldErrors?: Record<string, string[]>
+    success?: boolean
+    message?: string
+}
+
+export async function createAcademicYear(prevState: CreateAcademicYearState | unknown, formData: FormData): Promise<CreateAcademicYearState> {
     const session = await auth()
     if (!session || session.user?.role !== 'ADMIN') {
         return { error: "Unauthorized: Hanya Admin yang dapat mengelola tahun pelajaran." }
@@ -130,7 +137,7 @@ export async function getPromotePreview(classMapping: Record<string, string>) {
             orderBy: [{ class: 'asc' }, { name: 'asc' }],
         })
 
-        const preview = students.map(s => {
+        const preview = students.map((s: { id: number; nis: string; name: string; class: string }) => {
             const isGraduating = s.class.startsWith('9')
             const newClass = classMapping[s.class]
             return {
