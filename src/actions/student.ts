@@ -31,7 +31,7 @@ export async function getStudents(query?: string, statusFilter?: string) {
 
         const students = await prisma.student.findMany({
             where,
-            orderBy: { name: 'asc' },
+            orderBy: [{ class: 'asc' }, { name: 'asc' }],
             include: {
                 violations: {
                     select: { points: true },
