@@ -125,6 +125,12 @@ export async function deleteAcademicYear(id: number) {
     }
 }
 
+function isClassGraduating(cls: string): boolean {
+    if (!cls) return false
+    const trimmed = cls.trim().toUpperCase()
+    return trimmed.startsWith('9') || trimmed.startsWith('IX') || trimmed.includes('9') || trimmed.includes('IX')
+}
+
 export async function getPromotePreview(classMapping: Record<string, string>) {
     const session = await auth()
     if (!session || session.user?.role !== 'ADMIN') {
@@ -138,7 +144,7 @@ export async function getPromotePreview(classMapping: Record<string, string>) {
         })
 
         const preview = students.map((s: { id: number; nis: string; name: string; class: string }) => {
-            const isGraduating = s.class.startsWith('9')
+            const isGraduating = isClassGraduating(s.class)
             const newClass = classMapping[s.class]
             return {
                 id: s.id,
@@ -183,7 +189,7 @@ export async function promoteStudents(
 
         for (const student of students) {
             const exceptionStatus = exceptions[student.id]
-            const isGraduating = student.class.startsWith('9')
+            const isGraduating = isClassGraduating(student.class)
 
             if (exceptionStatus) {
                 await prisma.$transaction([

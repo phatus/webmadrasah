@@ -6,7 +6,7 @@ import Link from "next/link"
 import {
     ArrowLeft, TrendingUp, GraduationCap, AlertTriangle,
     CheckCircle2, ArrowRight, Users, BookOpen, Settings2, RotateCcw,
-    Printer, Download, Search, Filter, ShieldAlert
+    Printer, Download, Search, Filter, ShieldAlert, Sparkles
 } from "lucide-react"
 
 type AcademicYear = {
@@ -28,18 +28,43 @@ type Student = {
 type ExceptionStatus = 'TIDAK_NAIK' | 'KELUAR'
 type StepId = 'config' | 'preview' | 'result'
 
-function getClassLevel(cls: string): string {
-    return cls.charAt(0)
+function parseGradeLevel(cls: string): string {
+    if (!cls) return 'OTHER'
+    const trimmed = cls.trim().toUpperCase()
+    if (trimmed.startsWith('9') || trimmed.startsWith('IX') || trimmed.includes('9') || trimmed.includes('IX')) return '9'
+    if (trimmed.startsWith('8') || trimmed.startsWith('VIII') || trimmed.includes('8') || trimmed.includes('VIII')) return '8'
+    if (trimmed.startsWith('7') || trimmed.startsWith('VII') || trimmed.includes('7') || trimmed.includes('VII')) return '7'
+    
+    // Check first digit if available
+    const match = trimmed.match(/\d/)
+    if (match) return match[0]
+    return 'OTHER'
+}
+
+function suggestDestinationClass(cls: string): string {
+    const level = parseGradeLevel(cls)
+    if (level === '9') return 'ALUMNI'
+    
+    if (level === '7') {
+        if (cls.includes('VII')) return cls.replace(/VII/ig, 'VIII')
+        if (cls.includes('7')) return cls.replace('7', '8')
+        return `8${cls}`
+    }
+    if (level === '8') {
+        if (cls.includes('VIII')) return cls.replace(/VIII/ig, 'IX')
+        if (cls.includes('8')) return cls.replace('8', '9')
+        return `9${cls}`
+    }
+    return ''
 }
 
 function getDefaultMapping(classes: string[]): Record<string, string> {
     const mapping: Record<string, string> = {}
     classes.forEach(cls => {
-        const level = getClassLevel(cls)
-        const rombel = cls.substring(1)
-        if (level === '7') mapping[cls] = `8${rombel}`
-        else if (level === '8') mapping[cls] = `9${rombel}`
-        // kelas 9 → LULUS (no mapping needed)
+        const level = parseGradeLevel(cls)
+        if (level !== '9') {
+            mapping[cls] = suggestDestinationClass(cls)
+        }
     })
     return mapping
 }
@@ -79,11 +104,17 @@ export default function PromoteClient({ years, students }: { years: AcademicYear
 
     const [classMapping, setClassMapping] = useState<Record<string, string>>(() => getDefaultMapping(uniqueClasses))
 
+    // Handle Auto-fill Suggestion All Mappings
+    const handleAutoFillMapping = () => {
+        const suggested = getDefaultMapping(uniqueClasses)
+        setClassMapping(prev => ({ ...prev, ...suggested }))
+    }
+
     // Compute preview data
     const previewData = useMemo(() => {
         return students.map(s => {
             const exc = exceptions[s.id]
-            const isGraduating = getClassLevel(s.class) === '9'
+            const isGraduating = parseGradeLevel(s.class) === '9'
             let action: string
             let newClass: string
 
@@ -94,7 +125,7 @@ export default function PromoteClient({ years, students }: { years: AcademicYear
                 action = 'LULUS'
                 newClass = 'ALUMNI'
             } else {
-                const mapped = classMapping[s.class]
+                const mapped = classMapping[s.class]?.trim()
                 action = mapped ? 'NAIK' : 'PERLU_KONFIGURASI'
                 newClass = mapped ?? '?'
             }
@@ -133,7 +164,7 @@ export default function PromoteClient({ years, students }: { years: AcademicYear
 
     // Group students for exception config step (filtered by class dropdown)
     const exceptionStudentsGrouped = useMemo(() => {
-        const nonGraduating = students.filter(s => getClassLevel(s.class) !== '9')
+        const nonGraduating = students.filter(s => parseGradeLevel(s.class) !== '9')
         const filtered = nonGraduating.filter(s => selectedClassFilter === 'ALL' || s.class === selectedClassFilter)
         
         const map = new Map<string, Student[]>()
@@ -155,6 +186,10 @@ export default function PromoteClient({ years, students }: { years: AcademicYear
         keluar: previewData.filter(s => s.action === 'KELUAR').length,
         perluKonfig: previewData.filter(s => s.action === 'PERLU_KONFIGURASI').length,
     }), [previewData])
+
+    const unmappedClassesCount = useMemo(() => {
+        return uniqueClasses.filter(c => parseGradeLevel(c) !== '9' && !classMapping[c]?.trim()).length
+    }, [uniqueClasses, classMapping])
 
     const canProceed = stats.perluKonfig === 0 && selectedYearId !== null
 
@@ -381,24 +416,38 @@ export default function PromoteClient({ years, students }: { years: AcademicYear
 
                         {/* Step 2: Class Mapping Config */}
                         <div className="rounded-xl border border-gray-200 p-5 bg-gray-50/50">
-                            <h5 className="text-sm font-bold text-gray-900 mb-1 flex items-center gap-2">
-                                <Settings2 className="h-4 w-4 text-emerald-600" />
-                                Konfigurasi Pemetaan Kelas
-                            </h5>
-                            <p className="text-xs text-gray-500 mb-4">
-                                Kelas 9 otomatis → Alumni. Atur kelas tujuan untuk kelas 7 dan 8.
-                            </p>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                                <div>
+                                    <h5 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                        <Settings2 className="h-4 w-4 text-emerald-600" />
+                                        Konfigurasi Pemetaan Kelas Tujuan
+                                    </h5>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        Siswa Kelas 9/IX otomatis → Alumni. Atur kelas tujuan untuk kelas lainnya.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleAutoFillMapping}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3.5 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs self-start sm:self-auto"
+                                >
+                                    <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                                    Isi Pemetaan Otomatis
+                                </button>
+                            </div>
 
-                            {['7', '8'].map(level => {
-                                const levelClasses = uniqueClasses.filter(c => getClassLevel(c) === level)
+                            {['7', '8', 'OTHER'].map(level => {
+                                const levelClasses = uniqueClasses.filter(c => parseGradeLevel(c) === level)
                                 if (levelClasses.length === 0) return null
                                 return (
                                     <div key={level} className="mb-5">
-                                        <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Kelas {level}</div>
+                                        <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                                            {level === 'OTHER' ? 'Kelas Lainnya / Format Kustom' : `Kelas ${level}`}
+                                        </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                             {levelClasses.map(cls => (
                                                 <div key={cls} className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-gray-200">
-                                                    <span className="rounded-md bg-blue-100 text-blue-800 px-2.5 py-1 text-xs font-mono font-bold w-14 text-center">{cls}</span>
+                                                    <span className="rounded-md bg-blue-100 text-blue-800 px-2.5 py-1 text-xs font-mono font-bold w-16 text-center truncate" title={cls}>{cls}</span>
                                                     <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
                                                     <input
                                                         type="text"
@@ -415,13 +464,13 @@ export default function PromoteClient({ years, students }: { years: AcademicYear
                             })}
 
                             {/* Kelas 9 info */}
-                            {uniqueClasses.filter(c => getClassLevel(c) === '9').length > 0 && (
+                            {uniqueClasses.filter(c => parseGradeLevel(c) === '9').length > 0 && (
                                 <div className="rounded-xl bg-purple-50 border border-purple-100 p-4">
                                     <div className="text-xs font-bold uppercase tracking-wider text-purple-800 mb-2 flex items-center gap-1.5">
-                                        <GraduationCap className="h-4 w-4" /> Kelas 9 → Lulus → Alumni (Otomatis)
+                                        <GraduationCap className="h-4 w-4" /> Kelas 9 / IX → Lulus → Alumni (Otomatis)
                                     </div>
                                     <div className="flex flex-wrap gap-2">
-                                        {uniqueClasses.filter(c => getClassLevel(c) === '9').map(cls => (
+                                        {uniqueClasses.filter(c => parseGradeLevel(c) === '9').map(cls => (
                                             <span key={cls} className="rounded-md bg-purple-100 text-purple-900 px-2.5 py-1 text-xs font-mono font-bold">{cls}</span>
                                         ))}
                                     </div>
@@ -449,8 +498,8 @@ export default function PromoteClient({ years, students }: { years: AcademicYear
                                             onChange={e => setSelectedClassFilter(e.target.value)}
                                             className="rounded-md border border-gray-300 text-xs font-bold px-2.5 py-1 text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                         >
-                                            <option value="ALL">Semua Kelas ({students.filter(s => getClassLevel(s.class) !== '9').length} Siswa)</option>
-                                            {uniqueClasses.filter(c => getClassLevel(c) !== '9').map(cls => (
+                                            <option value="ALL">Semua Kelas ({students.filter(s => parseGradeLevel(s.class) !== '9').length} Siswa)</option>
+                                            {uniqueClasses.filter(c => parseGradeLevel(c) !== '9').map(cls => (
                                                 <option key={cls} value={cls}>Kelas {cls}</option>
                                             ))}
                                         </select>
@@ -525,7 +574,9 @@ export default function PromoteClient({ years, students }: { years: AcademicYear
                             </button>
                         </div>
                         {!canProceed && stats.perluKonfig > 0 && (
-                            <p className="text-right text-xs text-amber-600 font-bold mt-1">⚠ Ada {stats.perluKonfig} kelas yang belum dikonfigurasi mapping-nya.</p>
+                            <p className="text-right text-xs text-amber-600 font-bold mt-1">
+                                ⚠ Ada {stats.perluKonfig} siswa (dari {unmappedClassesCount} kelas) yang belum dikonfigurasi mapping-nya.
+                            </p>
                         )}
                         {!canProceed && !selectedYearId && (
                             <p className="text-right text-xs text-red-600 font-bold mt-1">Pilih tahun pelajaran tujuan terlebih dahulu.</p>
@@ -625,7 +676,7 @@ export default function PromoteClient({ years, students }: { years: AcademicYear
                                                 </span>
                                             </div>
                                             <span className="text-xs text-emerald-400 font-mono font-bold print:text-gray-700">
-                                                {getClassLevel(clsName) === '9' ? 'Target: Alumni (Lulus)' : `Target: Kelas ${classMapping[clsName] ?? '?'}`}
+                                                {parseGradeLevel(clsName) === '9' ? 'Target: Alumni (Lulus)' : `Target: Kelas ${classMapping[clsName] ?? '?'}`}
                                             </span>
                                         </div>
 
