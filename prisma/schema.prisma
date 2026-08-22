@@ -247,13 +247,15 @@ model AuditLog {
 }
 
 model Student {
-  id         Int                @id @default(autoincrement())
-  nis        String             @unique
-  name       String
-  class      String
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  violations StudentViolation[]
+  id           Int                   @id @default(autoincrement())
+  nis          String                @unique
+  name         String
+  class        String
+  status       String                @default("AKTIF") // AKTIF, LULUS, KELUAR
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  violations   StudentViolation[]
+  classHistory StudentClassHistory[]
 }
 
 model StudentViolation {
@@ -269,4 +271,31 @@ model StudentViolation {
   updatedAt     DateTime @updatedAt
 
   @@index([studentId])
+}
+
+model AcademicYear {
+  id           Int                   @id @default(autoincrement())
+  name         String                @unique // contoh: "2025/2026"
+  isActive     Boolean               @default(false)
+  startDate    DateTime
+  endDate      DateTime
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  classHistory StudentClassHistory[]
+}
+
+model StudentClassHistory {
+  id             Int          @id @default(autoincrement())
+  studentId      Int
+  academicYearId Int
+  class          String
+  status         String       @default("AKTIF") // AKTIF, LULUS, KELUAR, TIDAK_NAIK
+  notes          String?
+  createdAt      DateTime     @default(now())
+  student        Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  @@unique([studentId, academicYearId])
+  @@index([studentId])
+  @@index([academicYearId])
 }

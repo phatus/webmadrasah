@@ -14,17 +14,20 @@ const StudentSchema = z.object({
 })
 
 // Public: get all students with violation point totals
-export async function getStudents(query?: string) {
+export async function getStudents(query?: string, statusFilter?: string) {
     try {
+        const statusCondition = statusFilter === 'SEMUA' ? {} : { status: statusFilter ?? 'AKTIF' }
+
         const where = query
             ? {
+                  ...statusCondition,
                   OR: [
                       { name: { contains: query, mode: 'insensitive' as const } },
                       { nis: { contains: query, mode: 'insensitive' as const } },
                       { class: { contains: query, mode: 'insensitive' as const } },
                   ],
               }
-            : {}
+            : statusCondition
 
         const students = await prisma.student.findMany({
             where,
@@ -219,5 +222,63 @@ export async function importStudents(students: { nis: string, name: string, clas
     } catch (error) {
         console.error("Error importing students:", error)
         return { error: "Gagal menyimpan data impor siswa." }
+    }
+}
+
+// Admin only: transfer student to another class manually
+export async function transferStudentClass(studentId: number, newClass: string, notes?: string) {
+    const session = await auth()
+    if (!session || session.user?.role !== 'ADMIN') {
+        return { error: "Unauthorized." }
+    }
+    if (!newClass || newClass.trim() === '') {
+        return { error: "Kelas tujuan wajib diisi." }
+    }
+
+    try {
+        await prisma.student.update({
+            where: { id: studentId },
+            data: { class: newClass.trim() }
+        })
+        revalidatePath('/dashboard/students')
+        revalidatePath('/pelanggaran')
+        return { success: true, message: `Siswa berhasil dipindahkan ke kelas ${newClass}${notes ? ` (${notes})` : ''}.` }
+    } catch (error) {
+        console.error("Failed to transfer student class:", error)
+        return { error: "Gagal memindahkan kelas siswa." }
+    }
+}
+
+// Admin only: update student status (AKTIF, KELUAR)
+export async function updateStudentStatus(studentId: number, status: 'AKTIF' | 'KELUAR') {
+    const session = await auth()
+    if (!session || session.user?.role !== 'ADMIN') {
+        return { error: "Unauthorized." }
+    }
+
+    try {
+        await prisma.student.update({
+            where: { id: studentId },
+            data: { status }
+        })
+        revalidatePath('/dashboard/students')
+        return { success: true }
+    } catch (error) {
+        console.error("Failed to update student status:", error)
+        return { error: "Gagal mengubah status siswa." }
+    }
+}
+
+// Get student class history
+export async function getStudentClassHistory(studentId: number) {
+    try {
+        return await prisma.studentClassHistory.findMany({
+            where: { studentId },
+            include: { academicYear: true },
+            orderBy: { createdAt: 'desc' },
+        })
+    } catch (error) {
+        console.error("Error fetching student class history:", error)
+        return []
     }
 }

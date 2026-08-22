@@ -21,6 +21,8 @@ import {
     Trophy,
     MapPin,
     ShieldAlert,
+    TrendingUp,
+    CalendarDays,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -76,6 +78,8 @@ const MENU_GROUPS = [
                     { label: 'Lomba & Kompetisi', route: '/dashboard/competitions', icon: Trophy },
                     { label: 'Data Alumni', route: '/dashboard/alumni', icon: Users },
                     { label: 'Data Siswa', route: '/dashboard/students', icon: ShieldAlert, adminOnly: true },
+                    { label: 'Kenaikan Kelas', route: '/dashboard/students/promote', icon: TrendingUp, adminOnly: true },
+                    { label: 'Tahun Pelajaran', route: '/dashboard/students/academic-years', icon: CalendarDays, adminOnly: true },
                 ],
             },
             {
@@ -222,7 +226,7 @@ const SidebarItem = ({ item, pathname }: { item: any; pathname: string | null })
                 <div
                     className={cn(
                         "overflow-hidden transition-all duration-300 ease-in-out",
-                        pageName === item.label.toLowerCase() ? "max-h-96 mt-2" : "max-h-0"
+                        pageName === item.label.toLowerCase() ? "max-h-[1000px] mt-2" : "max-h-0"
                     )}
                 >
                     <ul className="flex flex-col gap-2.5 pl-6">
