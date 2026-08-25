@@ -3,15 +3,24 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, AlertCircle, Tag, Loader2 } from "lucide-react"
-import { createCategory } from "@/actions/category"
+import { ArrowLeft, AlertCircle, Pencil, Loader2 } from "lucide-react"
+import { updateCategory } from "@/actions/category"
 import slugify from "slugify"
 
-export default function CreateCategoryPage() {
+type Category = {
+    id: number
+    name: string
+    slug: string
+    _count?: {
+        posts: number
+    }
+}
+
+export default function EditCategoryClient({ category }: { category: Category }) {
     const router = useRouter()
-    const [name, setName] = useState("")
-    const [slug, setSlug] = useState("")
-    const [isAutoSlug, setIsAutoSlug] = useState(true)
+    const [name, setName] = useState(category.name)
+    const [slug, setSlug] = useState(category.slug)
+    const [isAutoSlug, setIsAutoSlug] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
 
@@ -31,12 +40,12 @@ export default function CreateCategoryPage() {
         formData.append("slug", slug)
 
         startTransition(async () => {
-            const res = await createCategory(formData)
+            const res = await updateCategory(category.id, formData)
             if (res.success) {
                 router.push("/dashboard/categories")
                 router.refresh()
             } else {
-                setError(res.error || "Gagal membuat kategori baru")
+                setError(res.error || "Gagal memperbarui kategori")
             }
         })
     }
@@ -52,10 +61,10 @@ export default function CreateCategoryPage() {
                 </Link>
                 <div>
                     <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <Tag className="w-5 h-5 text-emerald-600" />
-                        Buat Kategori Baru
+                        <Pencil className="w-5 h-5 text-emerald-600" />
+                        Edit Kategori
                     </h1>
-                    <p className="text-sm text-slate-500">Tambah kategori berita atau artikel baru</p>
+                    <p className="text-sm text-slate-500">Perbarui nama dan slug kategori berita</p>
                 </div>
             </div>
 
@@ -75,7 +84,6 @@ export default function CreateCategoryPage() {
                         <input
                             type="text"
                             required
-                            placeholder="Contoh: Pengumuman, Prestasi, Ekstrakulikuler..."
                             value={name}
                             onChange={(e) => handleNameChange(e.target.value)}
                             className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -99,16 +107,12 @@ export default function CreateCategoryPage() {
                             type="text"
                             required
                             readOnly={isAutoSlug}
-                            placeholder="pengumuman-sekolah"
                             value={slug}
                             onChange={(e) => setSlug(e.target.value)}
                             className={`w-full px-3.5 py-2.5 rounded-lg border text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                                 isAutoSlug ? "bg-slate-50 border-slate-200 text-slate-500" : "bg-white border-slate-300"
                             }`}
                         />
-                        <p className="text-xs text-slate-400 mt-1">
-                            URL kategori: <code className="text-slate-600 font-mono">/berita/kategori/{slug || "slug-kategori"}</code>
-                        </p>
                     </div>
 
                     <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
@@ -124,7 +128,7 @@ export default function CreateCategoryPage() {
                             className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition"
                         >
                             {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                            Simpan Kategori
+                            Simpan Perubahan
                         </button>
                     </div>
                 </form>
