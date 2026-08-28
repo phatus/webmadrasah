@@ -1,6 +1,7 @@
 import prisma from "@/lib/db"
 import Link from "next/link"
 import { FileText, Users, Eye, ArrowUp } from "lucide-react"
+import SyncElearningButton from "@/components/dashboard/SyncElearningButton"
 
 export default async function DashboardPage() {
     const postCount = await prisma.post.count()
@@ -72,6 +73,22 @@ export default async function DashboardPage() {
                             0.43%
                             <ArrowUp size={14} />
                         </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                            Integrasi Webhook E-Learning
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            Sinkronkan secara manual data Siswa, Guru, dan Tahun Ajaran dari WebMadrasah ke aplikasi E-Learning via Webhook API.
+                        </p>
+                    </div>
+                    <div className="shrink-0">
+                        <SyncElearningButton />
                     </div>
                 </div>
             </div>

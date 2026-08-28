@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "NODE_OPTIONS='--require ./fix-noexec.js' node node_modules/next/dist/bin/next dev -p 3001",
     "build": "npx prisma generate && npx next build",
     "start": "PORT=3001 node -r dotenv/config server.js",
     "check:style": "eslint .",
