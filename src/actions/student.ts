@@ -282,3 +282,44 @@ export async function getStudentClassHistory(studentId: number) {
         return []
     }
 }
+
+// Admin only: Perbaiki/tukar data NIS dan Nama siswa yang terbalik di database
+export async function fixSwappedStudentNisAndName() {
+    const session = await auth()
+    if (!session || session.user?.role !== 'ADMIN') {
+        return { error: "Unauthorized: Hanya Admin yang dapat memperbaiki data siswa." }
+    }
+
+    try {
+        const students = await prisma.student.findMany()
+        let swappedCount = 0
+
+        for (const s of students) {
+            const nisHasLetters = /[a-zA-Z]/.test(s.nis)
+            const nameIsNumeric = /^\d+$/.test(s.name.trim())
+
+            // Jika NIS berisi huruf ATAU Nama hanya berisi angka, maka data terbalik!
+            if (nisHasLetters || nameIsNumeric) {
+                const tempNis = s.name.trim()
+                const tempName = s.nis.trim()
+
+                await prisma.student.update({
+                    where: { id: s.id },
+                    data: {
+                        nis: tempNis,
+                        name: tempName
+                    }
+                })
+                swappedCount++
+            }
+        }
+
+        revalidatePath('/dashboard/students')
+        revalidatePath('/dashboard/students/promote')
+        revalidatePath('/pelanggaran')
+        return { success: true, message: `Berhasil memperbaiki ${swappedCount} data siswa yang NIS & Nama-nya terbalik!` }
+    } catch (error: any) {
+        console.error("Failed to fix swapped student NIS and Name:", error)
+        return { error: error.message || "Gagal memperbaiki data siswa." }
+    }
+}

@@ -133,10 +133,21 @@ export default function StudentImportForm() {
                     continue
                 }
 
+                let rawNis = cols[0]
+                let rawName = cols[1]
+                let rawClass = cols[2]
+
+                // Auto-detect and swap if cols[0] is Name (contains letters) and cols[1] is NIS (contains numbers)
+                if (/[a-zA-Z]/.test(rawNis) && /^\d+$/.test(rawName)) {
+                    const temp = rawNis
+                    rawNis = rawName
+                    rawName = temp
+                }
+
                 rows.push({
-                    nis: cols[0],
-                    name: cols[1],
-                    class: cols[2]
+                    nis: rawNis,
+                    name: rawName,
+                    class: rawClass
                 })
             }
 

@@ -2,12 +2,12 @@
 
 import { useState, useMemo } from "react"
 import Link from "next/link"
-import {
-    Plus, Pencil, ShieldAlert, Upload, TrendingUp, CalendarDays,
+import { RefreshCw, Plus, Pencil, ShieldAlert, Upload, TrendingUp, CalendarDays,
     Printer, Search, Layers, List, Users, Download, ChevronLeft, ChevronRight,
     School, AlertTriangle, CheckCircle2, Filter
 } from "lucide-react"
 import DeleteStudentButton from "./DeleteStudentButton"
+import { fixSwappedStudentNisAndName } from "@/actions/student"
 
 type Student = {
     id: number
@@ -36,6 +36,20 @@ export default function StudentsClient({
     const [viewMode, setViewMode] = useState<'grouped' | 'flat'>('grouped')
     const [pageSize, setPageSize] = useState<number>(25)
     const [currentPage, setCurrentPage] = useState<number>(1)
+    const [isFixing, setIsFixing] = useState(false)
+
+    const handleFixSwappedData = async () => {
+        if (!confirm("Apakah Anda yakin ingin memeriksa dan membalikkan data NIS dan Nama siswa yang terbalik?")) return
+        setIsFixing(true)
+        const res = await fixSwappedStudentNisAndName()
+        setIsFixing(false)
+        if (res.error) {
+            alert(res.error)
+        } else if (res.message) {
+            alert(res.message)
+            window.location.reload()
+        }
+    }
 
     // Extract unique classes list
     const availableClasses = useMemo(() => {
@@ -218,6 +232,16 @@ export default function StudentsClient({
                         <TrendingUp className="h-4 w-4 text-emerald-600" />
                         Kenaikan Kelas
                     </Link>
+                    <button
+                        type="button"
+                        onClick={handleFixSwappedData}
+                        disabled={isFixing}
+                        className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 py-2 px-3.5 text-sm font-bold text-amber-800 hover:bg-amber-100 transition shadow-sm disabled:opacity-50"
+                        title="Tukar data NIS dan Nama siswa jika saat impor tersimpan terbalik"
+                    >
+                        <RefreshCw className={`h-4 w-4 text-amber-600 ${isFixing ? 'animate-spin' : ''}`} />
+                        {isFixing ? 'Memperbaiki...' : 'Perbaiki NIS & Nama Terbalik'}
+                    </button>
                     <Link
                         href="/dashboard/students/import"
                         className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white py-2 px-3.5 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-black transition shadow-sm"
