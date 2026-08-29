@@ -291,33 +291,15 @@ export async function fixSwappedStudentNisAndName() {
     }
 
     try {
-        const students = await prisma.student.findMany()
-        let swappedCount = 0
-
-        for (const s of students) {
-            const nisHasLetters = /[a-zA-Z]/.test(s.nis)
-            const nameIsNumeric = /^\d+$/.test(s.name.trim())
-
-            // Jika NIS berisi huruf ATAU Nama hanya berisi angka, maka data terbalik!
-            if (nisHasLetters || nameIsNumeric) {
-                const tempNis = s.name.trim()
-                const tempName = s.nis.trim()
-
-                await prisma.student.update({
-                    where: { id: s.id },
-                    data: {
-                        nis: tempNis,
-                        name: tempName
-                    }
-                })
-                swappedCount++
-            }
-        }
+        // Eksekusi pembalikan kolom secara atomic di PostgreSQL tanpa menabrak unique constraint
+        const count1 = await prisma.$executeRaw`UPDATE "Student" SET nis = TRIM(name), name = TRIM(nis) WHERE nis ~ '[a-zA-Z]';`
+        const count2 = await prisma.$executeRaw`UPDATE "Student" SET nis = TRIM(name), name = TRIM(nis) WHERE name ~ '^\d+$' AND nis !~ '[a-zA-Z]';`
+        const totalSwapped = Number(count1) + Number(count2)
 
         revalidatePath('/dashboard/students')
         revalidatePath('/dashboard/students/promote')
         revalidatePath('/pelanggaran')
-        return { success: true, message: `Berhasil memperbaiki ${swappedCount} data siswa yang NIS & Nama-nya terbalik!` }
+        return { success: true, message: `Berhasil memperbaiki ${totalSwapped} data siswa yang NIS & Nama-nya terbalik!` }
     } catch (error: any) {
         console.error("Failed to fix swapped student NIS and Name:", error)
         return { error: error.message || "Gagal memperbaiki data siswa." }
