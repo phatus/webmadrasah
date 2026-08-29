@@ -335,15 +335,52 @@ export async function fixSwappedStudentNisAndName() {
         }
 
         let totalSwapped = 0
+        let skippedCount = 0
+
+        // Phase 1: Ubah NIS semua data terbalik ke NIS sementara (temp) untuk membebaskan unique constraint
+        const targets: { id: number; finalNis: string; finalName: string }[] = []
         for (const s of swapped) {
-            await prisma.student.update({
-                where: { id: s.id },
-                data: {
-                    nis: s.name.trim(),
-                    name: s.nis.trim()
+            const finalNis = s.name.trim()
+            const finalName = s.nis.trim()
+            const tempNis = `__TEMP_SWAP_${s.id}_${Date.now()}__`
+
+            try {
+                await prisma.student.update({
+                    where: { id: s.id },
+                    data: {
+                        nis: tempNis,
+                        name: finalName
+                    }
+                })
+                targets.push({ id: s.id, finalNis, finalName })
+            } catch (err) {
+                console.error(`Failed temp swap for student ${s.id}:`, err)
+            }
+        }
+
+        // Phase 2: Tetapkan nilai NIS akhir yang sudah benar
+        for (const t of targets) {
+            const existing = await prisma.student.findFirst({
+                where: {
+                    nis: t.finalNis,
+                    NOT: { id: t.id }
                 }
             })
-            totalSwapped++
+
+            if (existing) {
+                const safeNis = `${t.finalNis}_DUP_${t.id}`
+                await prisma.student.update({
+                    where: { id: t.id },
+                    data: { nis: safeNis }
+                })
+                skippedCount++
+            } else {
+                await prisma.student.update({
+                    where: { id: t.id },
+                    data: { nis: t.finalNis }
+                })
+                totalSwapped++
+            }
         }
 
         let syncMsg = ""
@@ -359,7 +396,14 @@ export async function fixSwappedStudentNisAndName() {
         revalidatePath('/dashboard/students')
         revalidatePath('/dashboard/students/promote')
         revalidatePath('/pelanggaran')
-        return { success: true, message: `Berhasil memperbaiki ${totalSwapped} data siswa yang NIS & Nama-nya terbalik!${syncMsg}` }
+
+        let msg = `Berhasil memperbaiki ${totalSwapped} data siswa yang terbalik!`
+        if (skippedCount > 0) {
+            msg += ` (${skippedCount} data disesuaikan NIS-nya karena ada bentrokan NIS duplikat).`
+        }
+        msg += syncMsg
+
+        return { success: true, message: msg }
     } catch (error: any) {
         console.error("Failed to fix swapped student NIS and Name:", error)
         return { error: error.message || "Gagal memperbaiki data siswa." }

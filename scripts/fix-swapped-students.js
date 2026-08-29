@@ -27,24 +27,59 @@ async function main() {
         console.log(`   - ID ${s.id} [Kelas ${s.class}]: NIS Saat Ini="${s.nis}" | Nama Saat Ini="${s.name}"`)
     }
 
-    console.log("\n🔄 Memperbaiki & membalikkan data NIS & Nama...")
+    console.log("\n🔄 Memperbaiki & membalikkan data NIS & Nama (Phase 1: Temporary Swap)...")
 
-    let count = 0
+    const targets = []
     for (const s of swapped) {
-        const correctNis = s.name.trim()
-        const correctName = s.nis.trim()
+        const finalNis = s.name.trim()
+        const finalName = s.nis.trim()
+        const tempNis = `__TEMP_SWAP_${s.id}_${Date.now()}__`
 
-        await prisma.student.update({
-            where: { id: s.id },
-            data: {
-                nis: correctNis,
-                name: correctName
-            }
-        })
-        count++
+        try {
+            await prisma.student.update({
+                where: { id: s.id },
+                data: {
+                    nis: tempNis,
+                    name: finalName
+                }
+            })
+            targets.push({ id: s.id, finalNis, finalName })
+        } catch (err) {
+            console.error(`Failed temp swap for student ${s.id}:`, err)
+        }
     }
 
-    console.log(`✅ Berhasil membetulkan ${count} data siswa!`)
+    console.log("🔄 Menetapkan NIS & Nama akhir (Phase 2: Final Assignment)...")
+
+    let count = 0
+    let skippedCount = 0
+
+    for (const t of targets) {
+        const existing = await prisma.student.findFirst({
+            where: {
+                nis: t.finalNis,
+                NOT: { id: t.id }
+            }
+        })
+
+        if (existing) {
+            const safeNis = `${t.finalNis}_DUP_${t.id}`
+            await prisma.student.update({
+                where: { id: t.id },
+                data: { nis: safeNis }
+            })
+            skippedCount++
+            console.log(`   - ID ${t.id}: NIS '${t.finalNis}' digunakan siswa ID ${existing.id}, diubah menjadi '${safeNis}'`)
+        } else {
+            await prisma.student.update({
+                where: { id: t.id },
+                data: { nis: t.finalNis }
+            })
+            count++
+        }
+    }
+
+    console.log(`✅ Berhasil membetulkan ${count} data siswa!${skippedCount > 0 ? ` (${skippedCount} disesuaikan karena duplikat)` : ''}`)
 }
 
 main()
