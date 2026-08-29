@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "NODE_OPTIONS='--require ./fix-noexec.js' node node_modules/next/dist/bin/next dev -p 3001",
     "build": "npx prisma generate && npx next build",
-    "start": "next start",
+    "start": "next start -p ${PORT:-3001}",
     "check:style": "eslint .",
     "setup:dev": "tsx scripts/setup-dev.ts",
     "setup:prod": "tsx scripts/setup-production.ts",
