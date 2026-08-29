@@ -13,7 +13,7 @@ export async function triggerElearningSync() {
   try {
     const students = await prisma.student.findMany({
       where: { status: 'AKTIF' },
-      select: { id: true, nis: true, nisn: true, name: true, class: true, status: true }
+      select: { id: true, nis: true, name: true, class: true, status: true }
     })
     const teachers = await prisma.teacher.findMany({
       select: { id: true, nip: true, name: true, subject: true, position: true }
