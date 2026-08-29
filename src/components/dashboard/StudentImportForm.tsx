@@ -65,10 +65,21 @@ export default function StudentImportForm() {
                     continue // Skip incomplete lines
                 }
 
+                let rawNis = cols[nisIndex]
+                let rawName = cols[nameIndex]
+                let rawClass = cols[classIndex]
+
+                // Auto-detect and swap if NIS has letters and Name has numbers/no letters
+                if (/[a-zA-Z]/.test(rawNis) && (!/[a-zA-Z]/.test(rawName) || /^\d+$/.test(rawName))) {
+                    const temp = rawNis
+                    rawNis = rawName
+                    rawName = temp
+                }
+
                 rows.push({
-                    nis: cols[nisIndex],
-                    name: cols[nameIndex],
-                    class: cols[classIndex]
+                    nis: rawNis,
+                    name: rawName,
+                    class: rawClass
                 })
             }
 
@@ -137,8 +148,8 @@ export default function StudentImportForm() {
                 let rawName = cols[1]
                 let rawClass = cols[2]
 
-                // Auto-detect and swap if cols[0] is Name (contains letters) and cols[1] is NIS (contains numbers)
-                if (/[a-zA-Z]/.test(rawNis) && /^\d+$/.test(rawName)) {
+                // Auto-detect and swap if cols[0] is Name (contains letters) and cols[1] is NIS (contains numbers/no letters)
+                if (/[a-zA-Z]/.test(rawNis) && (!/[a-zA-Z]/.test(rawName) || /^\d+$/.test(rawName))) {
                     const temp = rawNis
                     rawNis = rawName
                     rawName = temp

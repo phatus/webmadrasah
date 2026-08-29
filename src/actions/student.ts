@@ -6,6 +6,24 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 import type { Student, StudentViolation } from "@prisma/client"
+import { triggerElearningSync } from "@/actions/elearning-sync"
+
+function autoCorrectStudentNisAndName(nisInput: string, nameInput: string) {
+    let nis = nisInput.trim()
+    let name = nameInput.trim()
+
+    const nisHasLetters = /[a-zA-Z]/.test(nis)
+    const nameIsOnlyDigits = /^\d+$/.test(name)
+    const nameHasLetters = /[a-zA-Z]/.test(name)
+
+    if (nisHasLetters && (!nameHasLetters || nameIsOnlyDigits)) {
+        const temp = nis
+        nis = name
+        name = temp
+    }
+
+    return { nis, name }
+}
 
 const StudentSchema = z.object({
     nis: z.string().min(1, "NIS wajib diisi"),
@@ -66,9 +84,13 @@ export async function createStudent(prevState: any, formData: FormData) {
         return { error: "Unauthorized: Hanya Admin yang dapat menambah data siswa." }
     }
 
+    const rawNis = (formData.get('nis') as string || '').trim()
+    const rawName = (formData.get('name') as string || '').trim()
+    const { nis, name } = autoCorrectStudentNisAndName(rawNis, rawName)
+
     const validated = StudentSchema.safeParse({
-        nis: formData.get('nis'),
-        name: formData.get('name'),
+        nis,
+        name,
         class: formData.get('class'),
     })
 
@@ -101,9 +123,13 @@ export async function updateStudent(id: number, prevState: any, formData: FormDa
         return { error: "Unauthorized: Hanya Admin yang dapat mengubah data siswa." }
     }
 
+    const rawNis = (formData.get('nis') as string || '').trim()
+    const rawName = (formData.get('name') as string || '').trim()
+    const { nis, name } = autoCorrectStudentNisAndName(rawNis, rawName)
+
     const validated = StudentSchema.safeParse({
-        nis: formData.get('nis'),
-        name: formData.get('name'),
+        nis,
+        name,
         class: formData.get('class'),
     })
 
@@ -164,14 +190,16 @@ export async function importStudents(students: { nis: string, name: string, clas
     for (let i = 0; i < students.length; i++) {
         const student = students[i];
         const rowNum = i + 1;
-        const nis = student.nis?.toString().trim();
-        const name = student.name?.toString().trim();
+        const rawNis = student.nis?.toString().trim();
+        const rawName = student.name?.toString().trim();
         const className = student.class?.toString().trim();
 
-        if (!nis || !name || !className) {
+        if (!rawNis || !rawName || !className) {
             errors.push(`Baris ${rowNum}: NIS, Nama, dan Kelas wajib diisi.`);
             continue;
         }
+
+        const { nis, name } = autoCorrectStudentNisAndName(rawNis, rawName);
 
         validStudents.push({ nis, name, class: className });
     }
@@ -291,15 +319,47 @@ export async function fixSwappedStudentNisAndName() {
     }
 
     try {
-        // Eksekusi pembalikan kolom secara atomic di PostgreSQL tanpa menabrak unique constraint
-        const count1 = await prisma.$executeRaw`UPDATE "Student" SET nis = TRIM(name), name = TRIM(nis) WHERE nis ~ '[a-zA-Z]';`
-        const count2 = await prisma.$executeRaw`UPDATE "Student" SET nis = TRIM(name), name = TRIM(nis) WHERE name ~ '^\d+$' AND nis !~ '[a-zA-Z]';`
-        const totalSwapped = Number(count1) + Number(count2)
+        const allStudents = await prisma.student.findMany({
+            select: { id: true, nis: true, name: true }
+        })
+
+        const swapped = allStudents.filter((s: { id: number; nis: string; name: string }) => {
+            const nisHasLetters = /[a-zA-Z]/.test(s.nis)
+            const nameIsOnlyDigits = /^\d+$/.test(s.name.trim())
+            const nameHasLetters = /[a-zA-Z]/.test(s.name)
+            return nisHasLetters || (nameIsOnlyDigits && !nameHasLetters)
+        })
+
+        if (swapped.length === 0) {
+            return { success: true, message: "Tidak ada data siswa yang terbalik antara NIS dan Nama." }
+        }
+
+        let totalSwapped = 0
+        for (const s of swapped) {
+            await prisma.student.update({
+                where: { id: s.id },
+                data: {
+                    nis: s.name.trim(),
+                    name: s.nis.trim()
+                }
+            })
+            totalSwapped++
+        }
+
+        let syncMsg = ""
+        try {
+            const syncRes = await triggerElearningSync()
+            if (syncRes.success) {
+                syncMsg = " Data juga telah disinkronkan ke E-Learning."
+            }
+        } catch (syncErr) {
+            console.error("Auto sync to elearning failed:", syncErr)
+        }
 
         revalidatePath('/dashboard/students')
         revalidatePath('/dashboard/students/promote')
         revalidatePath('/pelanggaran')
-        return { success: true, message: `Berhasil memperbaiki ${totalSwapped} data siswa yang NIS & Nama-nya terbalik!` }
+        return { success: true, message: `Berhasil memperbaiki ${totalSwapped} data siswa yang NIS & Nama-nya terbalik!${syncMsg}` }
     } catch (error: any) {
         console.error("Failed to fix swapped student NIS and Name:", error)
         return { error: error.message || "Gagal memperbaiki data siswa." }
